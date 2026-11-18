@@ -1,15 +1,14 @@
 ﻿using XperienceCommunity.Manager.Commands;
 
-namespace XperienceCommunity.Manager.Options
+namespace XperienceCommunity.Manager.Options;
+
+/// <summary>
+/// The options used to execute the <see cref="ReportCommand"/>. 
+/// </summary>
+public class ReportOptions : IWizardOptions
 {
     /// <summary>
-    /// The options used to execute the <see cref="ReportCommand"/>. 
+    /// The customized name of the assets directory.
     /// </summary>
-    public class ReportOptions : IWizardOptions
-    {
-        /// <summary>
-        /// The customized name of the assets directory.
-        /// </summary>
-        public string? CustomAssetDirectoryName { get; set; }
-    }
+    public string? CustomAssetDirectoryName { get; set; }
 }

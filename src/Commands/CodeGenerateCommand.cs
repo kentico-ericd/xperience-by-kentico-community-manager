@@ -7,95 +7,94 @@ using XperienceCommunity.Manager.Services;
 using XperienceCommunity.Manager.Services.Interfaces;
 using XperienceCommunity.Manager.Wizards.Base;
 
-namespace XperienceCommunity.Manager.Commands
+namespace XperienceCommunity.Manager.Commands;
+
+/// <summary>
+/// A command which generates code files for Xperience by Kentico object types.
+/// </summary>
+public class CodeGenerateCommand : AbstractCommand
 {
+    private readonly IShellRunner shellRunner;
+    private readonly IScriptBuilder scriptBuilder;
+    private readonly IWizard<CodeGenerateOptions> wizard;
+
+
+    public override IEnumerable<string> Keywords => ["g", "generate"];
+
+
+    public override IEnumerable<string> Parameters => [];
+
+
+    public override string Description => "Generates code files for Xperience objects";
+
+
+    public override bool RequiresProfile => true;
+
+
     /// <summary>
-    /// A command which generates code files for Xperience by Kentico object types.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
+    /// into the constuctor.
     /// </summary>
-    public class CodeGenerateCommand : AbstractCommand
-    {
-        private readonly IShellRunner shellRunner;
-        private readonly IScriptBuilder scriptBuilder;
-        private readonly IWizard<CodeGenerateOptions> wizard;
-
-
-        public override IEnumerable<string> Keywords => ["g", "generate"];
-
-
-        public override IEnumerable<string> Parameters => [];
-
-
-        public override string Description => "Generates code files for Xperience objects";
-
-
-        public override bool RequiresProfile => true;
-
-
-        /// <summary>
-        /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-        /// into the constuctor.
-        /// </summary>
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        internal CodeGenerateCommand()
+    internal CodeGenerateCommand()
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    {
+    }
+
+
+    public CodeGenerateCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilder, IWizard<CodeGenerateOptions> wizard)
+    {
+        this.wizard = wizard;
+        this.shellRunner = shellRunner;
+        this.scriptBuilder = scriptBuilder;
+    }
+
+
+    public override async Task Execute(ToolProfile? profile, string? action)
+    {
+        var options = await wizard.Run();
+        AnsiConsole.WriteLine();
+        await GenerateCode(profile, options);
+    }
+
+
+    public override async Task PostExecute(ToolProfile? profile, string? action)
+    {
+        if (Errors.Count == 0)
         {
+            AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]Code generation complete![/]\n");
         }
 
+        await base.PostExecute(profile, action);
+    }
 
-        public CodeGenerateCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilder, IWizard<CodeGenerateOptions> wizard)
+
+    private async Task GenerateCode(ToolProfile? profile, CodeGenerateOptions options)
+    {
+        if (StopProcessing)
         {
-            this.wizard = wizard;
-            this.shellRunner = shellRunner;
-            this.scriptBuilder = scriptBuilder;
+            return;
         }
 
+        // Add working directory to relative location
+        options.Location = profile?.WorkingDirectory + options.Location;
 
-        public override async Task Execute(ToolProfile? profile, string? action)
+        string buildScript = scriptBuilder.SetScript(ScriptType.GenerateCode)
+            .WithPlaceholders(options)
+            .AppendNamespace(options.Namespace)
+            .InsertOrAppendProject(profile?.ProjectName)
+            .Build();
+        await shellRunner.Execute(new(buildScript)
         {
-            var options = await wizard.Run();
-            AnsiConsole.WriteLine();
-            await GenerateCode(profile, options);
-        }
-
-
-        public override async Task PostExecute(ToolProfile? profile, string? action)
-        {
-            if (Errors.Count == 0)
+            OutputHandler = (o, e) =>
             {
-                AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]Code generation complete![/]\n");
-            }
-
-            await base.PostExecute(profile, action);
-        }
-
-
-        private async Task GenerateCode(ToolProfile? profile, CodeGenerateOptions options)
-        {
-            if (StopProcessing)
-            {
-                return;
-            }
-
-            // Add working directory to relative location
-            options.Location = profile?.WorkingDirectory + options.Location;
-
-            string buildScript = scriptBuilder.SetScript(ScriptType.GenerateCode)
-                .WithPlaceholders(options)
-                .AppendNamespace(options.Namespace)
-                .InsertOrAppendProject(profile?.ProjectName)
-                .Build();
-            await shellRunner.Execute(new(buildScript)
-            {
-                OutputHandler = (o, e) =>
+                if (e.Data?.Contains("Generating code files for", StringComparison.OrdinalIgnoreCase) ?? false)
                 {
-                    if (e.Data?.Contains("Generating code files for", StringComparison.OrdinalIgnoreCase) ?? false)
-                    {
-                        AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]{e.Data}[/]");
-                    }
-                },
-                ErrorHandler = ErrorDataReceived,
-                WorkingDirectory = profile?.WorkingDirectory
-            }).WaitForExitAsync();
-        }
+                    AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]{e.Data}[/]");
+                }
+            },
+            ErrorHandler = ErrorDataReceived,
+            WorkingDirectory = profile?.WorkingDirectory
+        }).WaitForExitAsync();
     }
 }

@@ -4,47 +4,46 @@ using XperienceCommunity.Manager.Options;
 using XperienceCommunity.Manager.Steps;
 using XperienceCommunity.Manager.Wizards.Base;
 
-namespace XperienceCommunity.Manager.Wizards
-{
-    /// <summary>
-    /// A wizard which generates an <see cref="SettingsOptions"/> for configuring application settings. The 
-    /// <see cref="AbstractWizard{TOptions}.Run(string[])"/> method should be passed a list of available settings files.
-    /// </summary>
-    public class SettingsWizard : AbstractWizard<SettingsOptions>
-    {
-        public override Task InitSteps(params string[] args)
-        {
-            // List available appsettings files for selection
-            if (args.Length > 1)
-            {
-                Array.Sort(args, (a, b) => a.Length.CompareTo(b.Length));
-                Steps.Add(new Step<string>(new()
-                {
-                    Prompt = new SelectionPrompt<string>()
-                    .Title($"Which [{Constants.PROMPT_COLOR}]file[/] do you want to modify?")
-                    .PageSize(10)
-                    .MoreChoicesText("Scroll for more...")
-                    .AddChoices(args),
-                    ValueReceiver = (v) => Options.AppSettingsFileName = v
-                }));
-            }
+namespace XperienceCommunity.Manager.Wizards;
 
+/// <summary>
+/// A wizard which generates an <see cref="SettingsOptions"/> for configuring application settings. The 
+/// <see cref="AbstractWizard{TOptions}.Run(string[])"/> method should be passed a list of available settings files.
+/// </summary>
+public class SettingsWizard : AbstractWizard<SettingsOptions>
+{
+    public override Task InitSteps(params string[] args)
+    {
+        // List available appsettings files for selection
+        if (args.Length > 1)
+        {
+            Array.Sort(args, (a, b) => a.Length.CompareTo(b.Length));
             Steps.Add(new Step<string>(new()
             {
                 Prompt = new SelectionPrompt<string>()
-                    .Title($"What [{Constants.PROMPT_COLOR}]settings[/] do you want to change?")
-                    .PageSize(10)
-                    .MoreChoicesText("Scroll for more...")
-                    .AddChoices(
-                        SettingsOptions.ConnectionStringSetting,
-                        SettingsOptions.UngroupedKeySetting,
-                        SettingsOptions.CmsHeadlessSetting,
-                        SettingsOptions.AzureStorageSetting
-                    ),
-                ValueReceiver = (v) => Options.SettingToChange = v
+                .Title($"Which [{Constants.PROMPT_COLOR}]file[/] do you want to modify?")
+                .PageSize(10)
+                .MoreChoicesText("Scroll for more...")
+                .AddChoices(args),
+                ValueReceiver = (v) => Options.AppSettingsFileName = v
             }));
-
-            return Task.CompletedTask;
         }
+
+        Steps.Add(new Step<string>(new()
+        {
+            Prompt = new SelectionPrompt<string>()
+                .Title($"What [{Constants.PROMPT_COLOR}]settings[/] do you want to change?")
+                .PageSize(10)
+                .MoreChoicesText("Scroll for more...")
+                .AddChoices(
+                    SettingsOptions.ConnectionStringSetting,
+                    SettingsOptions.UngroupedKeySetting,
+                    SettingsOptions.CmsHeadlessSetting,
+                    SettingsOptions.AzureStorageSetting
+                ),
+            ValueReceiver = (v) => Options.SettingToChange = v
+        }));
+
+        return Task.CompletedTask;
     }
 }

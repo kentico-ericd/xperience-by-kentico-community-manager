@@ -7,288 +7,287 @@ using XperienceCommunity.Manager.Configuration;
 using XperienceCommunity.Manager.Services;
 using XperienceCommunity.Manager.Services.Interfaces;
 
-namespace XperienceCommunity.Manager.Commands
+namespace XperienceCommunity.Manager.Commands;
+
+/// <summary>
+/// A command which stores/restores Continuous Deployment data.
+/// </summary>
+public class ContinuousDeploymentCommand : AbstractCommand
 {
+    private const string STORE = "store";
+    private const string RESTORE = "restore";
+    private readonly IShellRunner shellRunner;
+    private readonly IScriptBuilder scriptBuilder;
+    private readonly IConfigManager configManager;
+
+
+    public override IEnumerable<string> Keywords => ["cd"];
+
+
+    public override IEnumerable<string> Parameters => [STORE, RESTORE];
+
+
+    public override string Description => "Stores or restores CD data";
+
+
+    public override bool RequiresProfile => true;
+
+
     /// <summary>
-    /// A command which stores/restores Continuous Deployment data.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
+    /// into the constuctor.
     /// </summary>
-    public class ContinuousDeploymentCommand : AbstractCommand
-    {
-        private const string STORE = "store";
-        private const string RESTORE = "restore";
-        private readonly IShellRunner shellRunner;
-        private readonly IScriptBuilder scriptBuilder;
-        private readonly IConfigManager configManager;
-
-
-        public override IEnumerable<string> Keywords => ["cd"];
-
-
-        public override IEnumerable<string> Parameters => [STORE, RESTORE];
-
-
-        public override string Description => "Stores or restores CD data";
-
-
-        public override bool RequiresProfile => true;
-
-
-        /// <summary>
-        /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-        /// into the constuctor.
-        /// </summary>
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        internal ContinuousDeploymentCommand()
+    internal ContinuousDeploymentCommand()
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    {
+    }
+
+
+    public ContinuousDeploymentCommand(
+        IShellRunner shellRunner,
+        IScriptBuilder scriptBuilder,
+        IConfigManager configManager)
+    {
+        this.shellRunner = shellRunner;
+        this.scriptBuilder = scriptBuilder;
+        this.configManager = configManager;
+    }
+
+
+    public override async Task PreExecute(ToolProfile? profile, string? action)
+    {
+        if (string.IsNullOrEmpty(action) || !Parameters.Any(p => p.Equals(action, StringComparison.OrdinalIgnoreCase)))
         {
+            LogError($"Must provide one parameter from '{string.Join(", ", Parameters)}'");
         }
 
+        await base.PreExecute(profile, action);
+    }
 
-        public ContinuousDeploymentCommand(
-            IShellRunner shellRunner,
-            IScriptBuilder scriptBuilder,
-            IConfigManager configManager)
+
+    public override async Task Execute(ToolProfile? profile, string? action)
+    {
+        if (StopProcessing)
         {
-            this.shellRunner = shellRunner;
-            this.scriptBuilder = scriptBuilder;
-            this.configManager = configManager;
+            return;
         }
 
-
-        public override async Task PreExecute(ToolProfile? profile, string? action)
+        var config = await configManager.GetConfig();
+        await EnsureCDStructure(profile, config);
+        if (action?.Equals(STORE, StringComparison.OrdinalIgnoreCase) ?? false)
         {
-            if (string.IsNullOrEmpty(action) || !Parameters.Any(p => p.Equals(action, StringComparison.OrdinalIgnoreCase)))
-            {
-                LogError($"Must provide one parameter from '{string.Join(", ", Parameters)}'");
-            }
-
-            await base.PreExecute(profile, action);
-        }
-
-
-        public override async Task Execute(ToolProfile? profile, string? action)
-        {
-            if (StopProcessing)
-            {
-                return;
-            }
-
-            var config = await configManager.GetConfig();
-            await EnsureCDStructure(profile, config);
-            if (action?.Equals(STORE, StringComparison.OrdinalIgnoreCase) ?? false)
-            {
-                await AnsiConsole.Progress()
-                    .Columns(
-                        new SpinnerColumn(),
-                        new ElapsedTimeColumn(),
-                        new TaskDescriptionColumn(),
-                        new ProgressBarColumn(),
-                        new PercentageColumn()
-                    )
-                    .StartAsync(async ctx =>
-                    {
-                        var task = ctx.AddTask($"[{Constants.EMPHASIS_COLOR}]Running the CD store script[/]");
-                        await StoreFiles(task, profile, config);
-                    });
-            }
-            else if (action?.Equals(RESTORE, StringComparison.OrdinalIgnoreCase) ?? false)
-            {
-                var sourceProfile = GetSourceProfile(profile, config);
-                if (sourceProfile is null)
+            await AnsiConsole.Progress()
+                .Columns(
+                    new SpinnerColumn(),
+                    new ElapsedTimeColumn(),
+                    new TaskDescriptionColumn(),
+                    new ProgressBarColumn(),
+                    new PercentageColumn()
+                )
+                .StartAsync(async ctx =>
                 {
-                    return;
-                }
-
-                await AnsiConsole.Progress()
-                    .Columns(
-                        new SpinnerColumn(),
-                        new ElapsedTimeColumn(),
-                        new TaskDescriptionColumn()
-                    )
-                    .StartAsync(async ctx =>
-                    {
-                        var task = ctx.AddTask($"[{Constants.EMPHASIS_COLOR}]Running the CD restore script[/]");
-                        await RestoreFiles(task, profile, sourceProfile, config);
-                    });
-            }
+                    var task = ctx.AddTask($"[{Constants.EMPHASIS_COLOR}]Running the CD store script[/]");
+                    await StoreFiles(task, profile, config);
+                });
         }
-
-
-        public override async Task PostExecute(ToolProfile? profile, string? action)
+        else if (action?.Equals(RESTORE, StringComparison.OrdinalIgnoreCase) ?? false)
         {
-            if (!Errors.Any())
-            {
-                AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]CD {action ?? "process"} complete![/]\n");
-            }
-
-            await base.PostExecute(profile, action);
-        }
-
-
-        private ToolProfile? GetSourceProfile(ToolProfile? profile, ToolConfiguration config)
-        {
-            if (StopProcessing)
-            {
-                return null;
-            }
-
-            var profiles = config.Profiles.Where(p =>
-                !p.ProjectName?.Equals(profile?.ProjectName, StringComparison.OrdinalIgnoreCase) ?? false);
-            if (!profiles.Any())
-            {
-                LogError("There are no profiles to restore CD data from. Use the 'install' or 'profile add' commands to register a new " +
-                    "profile.");
-
-                return null;
-            }
-
-            var prompt = new SelectionPrompt<ToolProfile>()
-                    .Title("Restore data from which profile?")
-                    .PageSize(10)
-                    .UseConverter(p => p.ProjectName ?? string.Empty)
-                    .MoreChoicesText("Scroll for more...")
-                    .AddChoices(profiles);
-
-            return AnsiConsole.Prompt(prompt);
-        }
-
-
-        private async Task EnsureCDStructure(ToolProfile? profile, ToolConfiguration config)
-        {
-            if (StopProcessing)
+            var sourceProfile = GetSourceProfile(profile, config);
+            if (sourceProfile is null)
             {
                 return;
             }
 
-            if (string.IsNullOrEmpty(profile?.ProjectName))
-            {
-                LogError("Unable to load profile name.");
-
-                return;
-            }
-
-            ContinuousDeploymentConfig cdConfig = new()
-            {
-                ConfigPath = Path.Combine(config.CDRootPath, profile.ProjectName, Constants.CD_CONFIG_NAME),
-                RepositoryPath = Path.Combine(config.CDRootPath, profile.ProjectName, Constants.CD_FILES_DIR)
-            };
-
-            Directory.CreateDirectory(cdConfig.RepositoryPath);
-
-            if (!File.Exists(cdConfig.ConfigPath))
-            {
-                string cdScript = scriptBuilder.SetScript(ScriptType.ContinuousDeploymentNewConfiguration)
-                    .WithPlaceholders(cdConfig)
-                    .InsertOrAppendProject(profile?.ProjectName)
-                    .Build();
-                await shellRunner.Execute(new(cdScript)
+            await AnsiConsole.Progress()
+                .Columns(
+                    new SpinnerColumn(),
+                    new ElapsedTimeColumn(),
+                    new TaskDescriptionColumn()
+                )
+                .StartAsync(async ctx =>
                 {
-                    ErrorHandler = ErrorDataReceived,
-                    WorkingDirectory = profile?.WorkingDirectory
-                }).WaitForExitAsync();
-            }
+                    var task = ctx.AddTask($"[{Constants.EMPHASIS_COLOR}]Running the CD restore script[/]");
+                    await RestoreFiles(task, profile, sourceProfile, config);
+                });
+        }
+    }
+
+
+    public override async Task PostExecute(ToolProfile? profile, string? action)
+    {
+        if (!Errors.Any())
+        {
+            AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]CD {action ?? "process"} complete![/]\n");
         }
 
+        await base.PostExecute(profile, action);
+    }
 
-        private async Task RestoreFiles(ProgressTask task, ToolProfile? profile, ToolProfile sourceProfile, ToolConfiguration config)
+
+    private ToolProfile? GetSourceProfile(ToolProfile? profile, ToolConfiguration config)
+    {
+        if (StopProcessing)
         {
-            if (StopProcessing)
-            {
-                return;
-            }
+            return null;
+        }
 
-            if (string.IsNullOrEmpty(sourceProfile.ProjectName))
-            {
-                LogError("Unable to load profile name.");
+        var profiles = config.Profiles.Where(p =>
+            !p.ProjectName?.Equals(profile?.ProjectName, StringComparison.OrdinalIgnoreCase) ?? false);
+        if (!profiles.Any())
+        {
+            LogError("There are no profiles to restore CD data from. Use the 'install' or 'profile add' commands to register a new " +
+                "profile.");
 
-                return;
-            }
+            return null;
+        }
 
-            ContinuousDeploymentConfig cdConfig = new()
-            {
-                ConfigPath = Path.Combine(config.CDRootPath, sourceProfile.ProjectName, Constants.CD_CONFIG_NAME),
-                RepositoryPath = Path.Combine(config.CDRootPath, sourceProfile.ProjectName, Constants.CD_FILES_DIR)
-            };
+        var prompt = new SelectionPrompt<ToolProfile>()
+                .Title("Restore data from which profile?")
+                .PageSize(10)
+                .UseConverter(p => p.ProjectName ?? string.Empty)
+                .MoreChoicesText("Scroll for more...")
+                .AddChoices(profiles);
 
-            string originalDescription = task.Description;
-            string cdScript = scriptBuilder.SetScript(ScriptType.ContinuousDeploymentRestore)
+        return AnsiConsole.Prompt(prompt);
+    }
+
+
+    private async Task EnsureCDStructure(ToolProfile? profile, ToolConfiguration config)
+    {
+        if (StopProcessing)
+        {
+            return;
+        }
+
+        if (string.IsNullOrEmpty(profile?.ProjectName))
+        {
+            LogError("Unable to load profile name.");
+
+            return;
+        }
+
+        ContinuousDeploymentConfig cdConfig = new()
+        {
+            ConfigPath = Path.Combine(config.CDRootPath, profile.ProjectName, Constants.CD_CONFIG_NAME),
+            RepositoryPath = Path.Combine(config.CDRootPath, profile.ProjectName, Constants.CD_FILES_DIR)
+        };
+
+        Directory.CreateDirectory(cdConfig.RepositoryPath);
+
+        if (!File.Exists(cdConfig.ConfigPath))
+        {
+            string cdScript = scriptBuilder.SetScript(ScriptType.ContinuousDeploymentNewConfiguration)
                 .WithPlaceholders(cdConfig)
                 .InsertOrAppendProject(profile?.ProjectName)
                 .Build();
             await shellRunner.Execute(new(cdScript)
             {
                 ErrorHandler = ErrorDataReceived,
-                WorkingDirectory = profile?.WorkingDirectory,
-                OutputHandler = (o, e) =>
-                {
-                    if (e.Data?.Contains("Object type", StringComparison.OrdinalIgnoreCase) ?? false)
-                    {
-                        // Message is something like "Object type Module: updating Activities"
-                        task.Description = e.Data;
-                    }
-                }
-            }).WaitForExitAsync();
-
-            task.Description = originalDescription;
-        }
-
-
-        private async Task StoreFiles(ProgressTask task, ToolProfile? profile, ToolConfiguration config)
-        {
-            if (StopProcessing)
-            {
-                return;
-            }
-
-            if (string.IsNullOrEmpty(profile?.ProjectName))
-            {
-                LogError("Unable to load profile name.");
-                return;
-            }
-
-            ContinuousDeploymentConfig cdConfig = new()
-            {
-                ConfigPath = Path.Combine(config.CDRootPath, profile.ProjectName, Constants.CD_CONFIG_NAME),
-                RepositoryPath = Path.Combine(config.CDRootPath, profile.ProjectName, Constants.CD_FILES_DIR)
-            };
-            string cdScript = scriptBuilder.SetScript(ScriptType.ContinuousDeploymentStore)
-                .WithPlaceholders(cdConfig)
-                .InsertOrAppendProject(profile?.ProjectName)
-                .Build();
-            await shellRunner.Execute(new(cdScript)
-            {
-                ErrorHandler = ErrorDataReceived,
-                OutputHandler = (o, e) =>
-                {
-                    if (e.Data?.Contains("System.IO.IOException", StringComparison.OrdinalIgnoreCase) ?? false)
-                    {
-                        // For some reason, System.IO.IOException is not caught by the error handler
-                        LogError(e.Data, o as Process);
-                    }
-                    else if ((e.Data?.Contains("Object type", StringComparison.OrdinalIgnoreCase) ?? false) && e.Data.Any(char.IsDigit))
-                    {
-                        // Message is something like "Object type 1/84: Module"
-                        string[] progressMessage = e.Data.Split(':');
-                        if (progressMessage.Length == 0)
-                        {
-                            return;
-                        }
-
-                        string[] progressNumbers = progressMessage[0].Split('/');
-                        if (progressNumbers.Length < 2)
-                        {
-                            return;
-                        }
-
-                        double progressCurrent = double.Parse(string.Join("", progressNumbers[0].Where(char.IsDigit)));
-                        double progressMax = double.Parse(string.Join("", progressNumbers[1].Where(char.IsDigit)));
-
-                        task.MaxValue = progressMax;
-                        task.Value = progressCurrent;
-                    }
-                },
                 WorkingDirectory = profile?.WorkingDirectory
             }).WaitForExitAsync();
         }
+    }
+
+
+    private async Task RestoreFiles(ProgressTask task, ToolProfile? profile, ToolProfile sourceProfile, ToolConfiguration config)
+    {
+        if (StopProcessing)
+        {
+            return;
+        }
+
+        if (string.IsNullOrEmpty(sourceProfile.ProjectName))
+        {
+            LogError("Unable to load profile name.");
+
+            return;
+        }
+
+        ContinuousDeploymentConfig cdConfig = new()
+        {
+            ConfigPath = Path.Combine(config.CDRootPath, sourceProfile.ProjectName, Constants.CD_CONFIG_NAME),
+            RepositoryPath = Path.Combine(config.CDRootPath, sourceProfile.ProjectName, Constants.CD_FILES_DIR)
+        };
+
+        string originalDescription = task.Description;
+        string cdScript = scriptBuilder.SetScript(ScriptType.ContinuousDeploymentRestore)
+            .WithPlaceholders(cdConfig)
+            .InsertOrAppendProject(profile?.ProjectName)
+            .Build();
+        await shellRunner.Execute(new(cdScript)
+        {
+            ErrorHandler = ErrorDataReceived,
+            WorkingDirectory = profile?.WorkingDirectory,
+            OutputHandler = (o, e) =>
+            {
+                if (e.Data?.Contains("Object type", StringComparison.OrdinalIgnoreCase) ?? false)
+                {
+                    // Message is something like "Object type Module: updating Activities"
+                    task.Description = e.Data;
+                }
+            }
+        }).WaitForExitAsync();
+
+        task.Description = originalDescription;
+    }
+
+
+    private async Task StoreFiles(ProgressTask task, ToolProfile? profile, ToolConfiguration config)
+    {
+        if (StopProcessing)
+        {
+            return;
+        }
+
+        if (string.IsNullOrEmpty(profile?.ProjectName))
+        {
+            LogError("Unable to load profile name.");
+            return;
+        }
+
+        ContinuousDeploymentConfig cdConfig = new()
+        {
+            ConfigPath = Path.Combine(config.CDRootPath, profile.ProjectName, Constants.CD_CONFIG_NAME),
+            RepositoryPath = Path.Combine(config.CDRootPath, profile.ProjectName, Constants.CD_FILES_DIR)
+        };
+        string cdScript = scriptBuilder.SetScript(ScriptType.ContinuousDeploymentStore)
+            .WithPlaceholders(cdConfig)
+            .InsertOrAppendProject(profile?.ProjectName)
+            .Build();
+        await shellRunner.Execute(new(cdScript)
+        {
+            ErrorHandler = ErrorDataReceived,
+            OutputHandler = (o, e) =>
+            {
+                if (e.Data?.Contains("System.IO.IOException", StringComparison.OrdinalIgnoreCase) ?? false)
+                {
+                    // For some reason, System.IO.IOException is not caught by the error handler
+                    LogError(e.Data, o as Process);
+                }
+                else if ((e.Data?.Contains("Object type", StringComparison.OrdinalIgnoreCase) ?? false) && e.Data.Any(char.IsDigit))
+                {
+                    // Message is something like "Object type 1/84: Module"
+                    string[] progressMessage = e.Data.Split(':');
+                    if (progressMessage.Length == 0)
+                    {
+                        return;
+                    }
+
+                    string[] progressNumbers = progressMessage[0].Split('/');
+                    if (progressNumbers.Length < 2)
+                    {
+                        return;
+                    }
+
+                    double progressCurrent = double.Parse(string.Join("", progressNumbers[0].Where(char.IsDigit)));
+                    double progressMax = double.Parse(string.Join("", progressNumbers[1].Where(char.IsDigit)));
+
+                    task.MaxValue = progressMax;
+                    task.Value = progressCurrent;
+                }
+            },
+            WorkingDirectory = profile?.WorkingDirectory
+        }).WaitForExitAsync();
     }
 }

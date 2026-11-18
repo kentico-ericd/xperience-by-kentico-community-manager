@@ -7,146 +7,145 @@ using XperienceCommunity.Manager.Services;
 using XperienceCommunity.Manager.Services.Interfaces;
 using XperienceCommunity.Manager.Wizards.Base;
 
-namespace XperienceCommunity.Manager.Commands
+namespace XperienceCommunity.Manager.Commands;
+
+/// <summary>
+/// A command which updates the NuGet packages and database of the Xperience by Kentico project in
+/// the current directory.
+/// </summary>
+public class UpdateCommand : AbstractCommand
 {
+    private readonly IShellRunner shellRunner;
+    private readonly IScriptBuilder scriptBuilder;
+    private readonly IWizard<UpdateOptions> wizard;
+    private readonly IEnumerable<string> packageNames =
+    [
+        "kentico.xperience.admin",
+        "kentico.xperience.azurestorage",
+        "kentico.xperience.cloud",
+        "kentico.xperience.graphql",
+        "kentico.xperience.imageprocessing",
+        "kentico.xperience.webapp",
+        "kentico.xperience.mjml"
+    ];
+
+
+    public override IEnumerable<string> Keywords => ["u", "update"];
+
+
+    public override IEnumerable<string> Parameters => [];
+
+
+    public override string Description => "Updates a project's NuGet packages and database version";
+
+
+    public override bool RequiresProfile => true;
+
+
     /// <summary>
-    /// A command which updates the NuGet packages and database of the Xperience by Kentico project in
-    /// the current directory.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
+    /// into the constuctor.
     /// </summary>
-    public class UpdateCommand : AbstractCommand
-    {
-        private readonly IShellRunner shellRunner;
-        private readonly IScriptBuilder scriptBuilder;
-        private readonly IWizard<UpdateOptions> wizard;
-        private readonly IEnumerable<string> packageNames =
-        [
-            "kentico.xperience.admin",
-            "kentico.xperience.azurestorage",
-            "kentico.xperience.cloud",
-            "kentico.xperience.graphql",
-            "kentico.xperience.imageprocessing",
-            "kentico.xperience.webapp",
-            "kentico.xperience.mjml"
-        ];
-
-
-        public override IEnumerable<string> Keywords => ["u", "update"];
-
-
-        public override IEnumerable<string> Parameters => [];
-
-
-        public override string Description => "Updates a project's NuGet packages and database version";
-
-
-        public override bool RequiresProfile => true;
-
-
-        /// <summary>
-        /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-        /// into the constuctor.
-        /// </summary>
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        internal UpdateCommand()
+    internal UpdateCommand()
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    {
+    }
+
+
+    public UpdateCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilder, IWizard<UpdateOptions> wizard)
+    {
+        this.wizard = wizard;
+        this.shellRunner = shellRunner;
+        this.scriptBuilder = scriptBuilder;
+    }
+
+
+    public override async Task Execute(ToolProfile? profile, string? action)
+    {
+        if (StopProcessing)
         {
+            return;
         }
 
+        var options = await wizard.Run();
 
-        public UpdateCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilder, IWizard<UpdateOptions> wizard)
+        await UpdatePackages(options, profile);
+        await BuildProject(profile);
+        await UpdateDatabase(profile);
+    }
+
+
+    public override async Task PostExecute(ToolProfile? profile, string? action)
+    {
+        if (Errors.Count == 0)
         {
-            this.wizard = wizard;
-            this.shellRunner = shellRunner;
-            this.scriptBuilder = scriptBuilder;
+            AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]Update complete![/]\n");
         }
 
+        await base.PostExecute(profile, action);
+    }
 
-        public override async Task Execute(ToolProfile? profile, string? action)
+
+    private async Task BuildProject(ToolProfile? profile)
+    {
+        if (StopProcessing)
+        {
+            return;
+        }
+
+        AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Attempting to build the project...[/]");
+
+        string buildScript = scriptBuilder.SetScript(ScriptType.BuildProject).Build();
+        await shellRunner.Execute(new(buildScript)
+        {
+            ErrorHandler = ErrorDataReceived,
+            WorkingDirectory = profile?.WorkingDirectory
+        }).WaitForExitAsync();
+    }
+
+
+    private async Task UpdatePackages(UpdateOptions options, ToolProfile? profile)
+    {
+        foreach (string package in packageNames)
         {
             if (StopProcessing)
             {
                 return;
             }
 
-            var options = await wizard.Run();
+            AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Updating {package} to version {options.Version}...[/]");
 
-            await UpdatePackages(options, profile);
-            await BuildProject(profile);
-            await UpdateDatabase(profile);
-        }
-
-
-        public override async Task PostExecute(ToolProfile? profile, string? action)
-        {
-            if (Errors.Count == 0)
-            {
-                AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]Update complete![/]\n");
-            }
-
-            await base.PostExecute(profile, action);
-        }
-
-
-        private async Task BuildProject(ToolProfile? profile)
-        {
-            if (StopProcessing)
-            {
-                return;
-            }
-
-            AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Attempting to build the project...[/]");
-
-            string buildScript = scriptBuilder.SetScript(ScriptType.BuildProject).Build();
-            await shellRunner.Execute(new(buildScript)
-            {
-                ErrorHandler = ErrorDataReceived,
-                WorkingDirectory = profile?.WorkingDirectory
-            }).WaitForExitAsync();
-        }
-
-
-        private async Task UpdatePackages(UpdateOptions options, ToolProfile? profile)
-        {
-            foreach (string package in packageNames)
-            {
-                if (StopProcessing)
-                {
-                    return;
-                }
-
-                AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Updating {package} to version {options.Version}...[/]");
-
-                options.PackageName = package;
-                string packageScript = scriptBuilder.SetScript(ScriptType.PackageUpdate)
-                    .WithPlaceholders(options)
-                    .AppendVersion(options.Version)
-                    .InsertOrAppendProject(profile?.ProjectName)
-                    .Build();
-                await shellRunner.Execute(new(packageScript)
-                {
-                    ErrorHandler = ErrorDataReceived,
-                    WorkingDirectory = profile?.WorkingDirectory
-                }).WaitForExitAsync();
-            }
-        }
-
-
-        private async Task UpdateDatabase(ToolProfile? profile)
-        {
-            if (StopProcessing)
-            {
-                return;
-            }
-
-            AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Updating database...[/]");
-            string dbScript = scriptBuilder.SetScript(ScriptType.DatabaseUpdate)
+            options.PackageName = package;
+            string packageScript = scriptBuilder.SetScript(ScriptType.PackageUpdate)
+                .WithPlaceholders(options)
+                .AppendVersion(options.Version)
                 .InsertOrAppendProject(profile?.ProjectName)
                 .Build();
-            await shellRunner.Execute(new(dbScript)
+            await shellRunner.Execute(new(packageScript)
             {
                 ErrorHandler = ErrorDataReceived,
                 WorkingDirectory = profile?.WorkingDirectory
             }).WaitForExitAsync();
         }
+    }
+
+
+    private async Task UpdateDatabase(ToolProfile? profile)
+    {
+        if (StopProcessing)
+        {
+            return;
+        }
+
+        AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Updating database...[/]");
+        string dbScript = scriptBuilder.SetScript(ScriptType.DatabaseUpdate)
+            .InsertOrAppendProject(profile?.ProjectName)
+            .Build();
+        await shellRunner.Execute(new(dbScript)
+        {
+            ErrorHandler = ErrorDataReceived,
+            WorkingDirectory = profile?.WorkingDirectory
+        }).WaitForExitAsync();
     }
 }

@@ -7,136 +7,135 @@ using XperienceCommunity.Manager.Configuration;
 using XperienceCommunity.Manager.Services;
 using XperienceCommunity.Manager.Services.Interfaces;
 
-namespace XperienceCommunity.Manager.Commands
+namespace XperienceCommunity.Manager.Commands;
+
+/// <summary>
+/// A command which deletes an Xperience by Kentico project.
+/// </summary>
+public class DeleteCommand : AbstractCommand
 {
+    private bool deleteConfirmed;
+    private readonly IShellRunner shellRunner;
+    private readonly ISqlExecutor sqlExecutor;
+    private readonly IScriptBuilder scriptBuilder;
+    private readonly IConfigManager configManager;
+    private readonly IAppSettingsManager appSettingsManager;
+
+
+    public override IEnumerable<string> Keywords => ["d", "delete"];
+
+
+    public override IEnumerable<string> Parameters => [];
+
+
+    public override string Description => "Deletes a project and its database";
+
+
+    public override bool RequiresProfile => true;
+
+
     /// <summary>
-    /// A command which deletes an Xperience by Kentico project.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
+    /// into the constuctor.
     /// </summary>
-    public class DeleteCommand : AbstractCommand
-    {
-        private bool deleteConfirmed;
-        private readonly IShellRunner shellRunner;
-        private readonly ISqlExecutor sqlExecutor;
-        private readonly IScriptBuilder scriptBuilder;
-        private readonly IConfigManager configManager;
-        private readonly IAppSettingsManager appSettingsManager;
-
-
-        public override IEnumerable<string> Keywords => ["d", "delete"];
-
-
-        public override IEnumerable<string> Parameters => [];
-
-
-        public override string Description => "Deletes a project and its database";
-
-
-        public override bool RequiresProfile => true;
-
-
-        /// <summary>
-        /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-        /// into the constuctor.
-        /// </summary>
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        internal DeleteCommand()
+    internal DeleteCommand()
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    {
+    }
+
+
+    public DeleteCommand(
+        IShellRunner shellRunner,
+        ISqlExecutor sqlExecutor,
+        IScriptBuilder scriptBuilder,
+        IConfigManager configManager,
+        IAppSettingsManager appSettingsManager)
+    {
+        this.shellRunner = shellRunner;
+        this.sqlExecutor = sqlExecutor;
+        this.scriptBuilder = scriptBuilder;
+        this.configManager = configManager;
+        this.appSettingsManager = appSettingsManager;
+    }
+
+
+    public override async Task Execute(ToolProfile? profile, string? action)
+    {
+        deleteConfirmed = await AnsiConsole.ConfirmAsync($"This will [{Constants.ERROR_COLOR}]delete[/] the current profile's physical folder " +
+            $"and database!\nDo you want to continue?", false);
+        if (!deleteConfirmed)
         {
+            return;
         }
 
-
-        public DeleteCommand(
-            IShellRunner shellRunner,
-            ISqlExecutor sqlExecutor,
-            IScriptBuilder scriptBuilder,
-            IConfigManager configManager,
-            IAppSettingsManager appSettingsManager)
+        AnsiConsole.WriteLine();
+        await DropDatabase(profile);
+        await UninstallFiles(profile);
+        if (!StopProcessing)
         {
-            this.shellRunner = shellRunner;
-            this.sqlExecutor = sqlExecutor;
-            this.scriptBuilder = scriptBuilder;
-            this.configManager = configManager;
-            this.appSettingsManager = appSettingsManager;
+            await configManager.RemoveProfile(profile);
+        }
+    }
+
+
+    public override async Task PostExecute(ToolProfile? profile, string? action)
+    {
+        if (!deleteConfirmed)
+        {
+            AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Delete cancelled[/]\n");
+        }
+        else if (Errors.Count == 0)
+        {
+            AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]Delete complete![/]\n");
         }
 
+        await base.PostExecute(profile, action);
+    }
 
-        public override async Task Execute(ToolProfile? profile, string? action)
+
+    private async Task DropDatabase(ToolProfile? profile)
+    {
+        if (StopProcessing)
         {
-            deleteConfirmed = await AnsiConsole.ConfirmAsync($"This will [{Constants.ERROR_COLOR}]delete[/] the current profile's physical folder " +
-                $"and database!\nDo you want to continue?", false);
-            if (!deleteConfirmed)
-            {
-                return;
-            }
-
-            AnsiConsole.WriteLine();
-            await DropDatabase(profile);
-            await UninstallFiles(profile);
-            if (!StopProcessing)
-            {
-                await configManager.RemoveProfile(profile);
-            }
+            return;
         }
 
+        AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Deleting database...[/]");
 
-        public override async Task PostExecute(ToolProfile? profile, string? action)
+        string? connString = await appSettingsManager.GetConnectionString(profile, "CMSConnectionString");
+        if (connString is null)
         {
-            if (!deleteConfirmed)
-            {
-                AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Delete cancelled[/]\n");
-            }
-            else if (Errors.Count == 0)
-            {
-                AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]Delete complete![/]\n");
-            }
+            LogError("Couldn't load connection string.");
 
-            await base.PostExecute(profile, action);
+            return;
         }
 
+        // Find "Initial Catalog" in connection string
+        var builder = new SqlConnectionStringBuilder(connString);
+        string databaseName = builder.InitialCatalog;
+        // Remove "Initial Catalog" from connection string, or trying to delete will throw "in use" error
+        builder.InitialCatalog = "";
+        connString = builder.ToString();
 
-        private async Task DropDatabase(ToolProfile? profile)
+        Dictionary<string, object> parameters = new() { { "@DBName", databaseName } };
+        await sqlExecutor.ExecuteNonQuery(connString, "DropDatabase.sql", parameters);
+    }
+
+
+    private async Task UninstallFiles(ToolProfile? profile)
+    {
+        if (StopProcessing)
         {
-            if (StopProcessing)
-            {
-                return;
-            }
-
-            AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Deleting database...[/]");
-
-            string? connString = await appSettingsManager.GetConnectionString(profile, "CMSConnectionString");
-            if (connString is null)
-            {
-                LogError("Couldn't load connection string.");
-
-                return;
-            }
-
-            // Find "Initial Catalog" in connection string
-            var builder = new SqlConnectionStringBuilder(connString);
-            string databaseName = builder.InitialCatalog;
-            // Remove "Initial Catalog" from connection string, or trying to delete will throw "in use" error
-            builder.InitialCatalog = "";
-            connString = builder.ToString();
-
-            Dictionary<string, object> parameters = new() { { "@DBName", databaseName } };
-            await sqlExecutor.ExecuteNonQuery(connString, "DropDatabase.sql", parameters);
+            return;
         }
 
+        AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Deleting local files...[/]");
 
-        private async Task UninstallFiles(ToolProfile? profile)
+        string uninstallScript = scriptBuilder.SetScript(ScriptType.DeleteDirectory).WithPlaceholders(profile).Build();
+        await shellRunner.Execute(new(uninstallScript)
         {
-            if (StopProcessing)
-            {
-                return;
-            }
-
-            AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Deleting local files...[/]");
-
-            string uninstallScript = scriptBuilder.SetScript(ScriptType.DeleteDirectory).WithPlaceholders(profile).Build();
-            await shellRunner.Execute(new(uninstallScript)
-            {
-                ErrorHandler = ErrorDataReceived
-            }).WaitForExitAsync();
-        }
+            ErrorHandler = ErrorDataReceived
+        }).WaitForExitAsync();
     }
 }

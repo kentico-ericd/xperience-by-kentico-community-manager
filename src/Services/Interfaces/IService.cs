@@ -1,6 +1,5 @@
-namespace XperienceCommunity.Manager.Services.Interfaces
+namespace XperienceCommunity.Manager.Services.Interfaces;
+
+public interface IService
 {
-    public interface IService
-    {
-    }
 }

@@ -1,22 +1,21 @@
 using XperienceCommunity.Manager.Commands.Base;
 
-namespace XperienceCommunity.Manager.Repositories
+namespace XperienceCommunity.Manager.Repositories;
+
+/// <summary>
+/// Represents a collection of <see cref="ICommand"/>s.
+/// </summary>
+public interface ICommandRepository : IRepository
 {
     /// <summary>
-    /// Represents a collection of <see cref="ICommand"/>s.
+    /// Gets a command from the repository where <see cref="ICommand.Keywords"/> contains the provided string,
+    /// or <c>null</c> if not found.
     /// </summary>
-    public interface ICommandRepository : IRepository
-    {
-        /// <summary>
-        /// Gets a command from the repository where <see cref="ICommand.Keywords"/> contains the provided string,
-        /// or <c>null</c> if not found.
-        /// </summary>
-        public ICommand? Get(string keyword);
+    public ICommand? Get(string keyword);
 
 
-        /// <summary>
-        /// Gets all commands in the repository.
-        /// </summary>
-        public IEnumerable<ICommand> GetAll();
-    }
+    /// <summary>
+    /// Gets all commands in the repository.
+    /// </summary>
+    public IEnumerable<ICommand> GetAll();
 }

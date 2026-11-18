@@ -1,16 +1,15 @@
 using XperienceCommunity.Manager.Commands.Base;
 
-namespace XperienceCommunity.Manager.Repositories
+namespace XperienceCommunity.Manager.Repositories;
+
+/// <summary>
+/// Contains all <see cref="ICommand"/>s registered at startup.
+/// </summary>
+public class CommandRepository(IEnumerable<ICommand> commands) : ICommandRepository
 {
-    /// <summary>
-    /// Contains all <see cref="ICommand"/>s registered at startup.
-    /// </summary>
-    public class CommandRepository(IEnumerable<ICommand> commands) : ICommandRepository
-    {
-        public ICommand? Get(string keyword) => commands.FirstOrDefault(c =>
-            c?.Keywords.Contains(keyword, StringComparer.OrdinalIgnoreCase) ?? false);
+    public ICommand? Get(string keyword) => commands.FirstOrDefault(c =>
+        c?.Keywords.Contains(keyword, StringComparer.OrdinalIgnoreCase) ?? false);
 
 
-        public IEnumerable<ICommand> GetAll() => commands;
-    }
+    public IEnumerable<ICommand> GetAll() => commands;
 }

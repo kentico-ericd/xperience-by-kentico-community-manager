@@ -4,90 +4,89 @@ using Spectre.Console;
 
 using XperienceCommunity.Manager.Configuration;
 
-namespace XperienceCommunity.Manager.Commands.Base
+namespace XperienceCommunity.Manager.Commands.Base;
+
+/// <summary>
+/// Describes an executable command from the CLI.
+/// </summary>
+public abstract class AbstractCommand : ICommand
 {
-    /// <summary>
-    /// Describes an executable command from the CLI.
-    /// </summary>
-    public abstract class AbstractCommand : ICommand
+    public List<string> Errors { get; } = [];
+
+
+    public bool StopProcessing { get; set; }
+
+
+    public abstract IEnumerable<string> Keywords { get; }
+
+
+    public abstract IEnumerable<string> Parameters { get; }
+
+
+    public abstract string Description { get; }
+
+
+    public virtual bool RequiresProfile { get; set; }
+
+
+    public virtual Task PreExecute(ToolProfile? profile, string? action)
     {
-        public List<string> Errors { get; } = [];
-
-
-        public bool StopProcessing { get; set; }
-
-
-        public abstract IEnumerable<string> Keywords { get; }
-
-
-        public abstract IEnumerable<string> Parameters { get; }
-
-
-        public abstract string Description { get; }
-
-
-        public virtual bool RequiresProfile { get; set; }
-
-
-        public virtual Task PreExecute(ToolProfile? profile, string? action)
+        if (RequiresProfile)
         {
-            if (RequiresProfile)
+            if (profile is null)
             {
-                if (profile is null)
-                {
-                    LogError("This command requires a profile.");
-                }
-                else
-                {
-                    PrintCurrentProfile(profile);
-                }
+                LogError("This command requires a profile.");
             }
-
-            return Task.CompletedTask;
-        }
-
-
-        public abstract Task Execute(ToolProfile? profile, string? action);
-
-
-        public virtual Task PostExecute(ToolProfile? profile, string? action) => Task.CompletedTask;
-
-
-        /// <summary>
-        /// A handler which can be assigned to <see cref="Process.ErrorDataReceived"/> to handle errors. 
-        /// </summary>
-        protected void ErrorDataReceived(object sender, DataReceivedEventArgs e)
-        {
-            if (!string.IsNullOrEmpty(e.Data))
+            else
             {
-                LogError(e.Data, sender as Process);
+                PrintCurrentProfile(profile);
             }
         }
 
+        return Task.CompletedTask;
+    }
 
-        /// <summary>
-        /// Adds an error to <see cref="Errors"/> and stops additional processing.
-        /// </summary>
-        protected void LogError(string message, Process? process = null)
+
+    public abstract Task Execute(ToolProfile? profile, string? action);
+
+
+    public virtual Task PostExecute(ToolProfile? profile, string? action) => Task.CompletedTask;
+
+
+    /// <summary>
+    /// A handler which can be assigned to <see cref="Process.ErrorDataReceived"/> to handle errors. 
+    /// </summary>
+    protected void ErrorDataReceived(object sender, DataReceivedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(e.Data))
         {
-            Errors.Add(message);
-
-            StopProcessing = true;
-            if (process is not null && !process.HasExited)
-            {
-                process.Kill();
-            }
+            LogError(e.Data, sender as Process);
         }
+    }
 
 
-        protected static void PrintCurrentProfile(ToolProfile? profile)
+    /// <summary>
+    /// Adds an error to <see cref="Errors"/> and stops additional processing.
+    /// </summary>
+    protected void LogError(string message, Process? process = null)
+    {
+        Errors.Add(message);
+
+        StopProcessing = true;
+        if (process is not null && !process.HasExited)
         {
-            AnsiConsole.Write(new Rule("Current profile:") { Justification = Justify.Left });
-            AnsiConsole.MarkupLineInterpolated($"Name: [{Constants.EMPHASIS_COLOR}]{profile?.ProfileName ?? "None"}[/]");
-            AnsiConsole.MarkupLineInterpolated($"Project: [{Constants.EMPHASIS_COLOR}]{profile?.ProjectName ?? "None"}[/]");
-            AnsiConsole.MarkupLineInterpolated($"Path: [{Constants.EMPHASIS_COLOR}]{profile?.WorkingDirectory ?? "None"}[/]");
-            AnsiConsole.Write(new Rule());
-            AnsiConsole.WriteLine();
+            process.Kill();
         }
+    }
+
+
+    protected static void PrintCurrentProfile(ToolProfile? profile)
+    {
+        AnsiConsole.Write(new Rule("Current profile:") { Justification = Justify.Left });
+        AnsiConsole.MarkupLineInterpolated($"Name: [{Constants.EMPHASIS_COLOR}]{profile?.ProfileName ?? "None"}[/]");
+        AnsiConsole.MarkupLineInterpolated($"Project: [{Constants.EMPHASIS_COLOR}]{profile?.ProjectName ?? "None"}[/]");
+        AnsiConsole.MarkupLineInterpolated($"Path: [{Constants.EMPHASIS_COLOR}]{profile?.WorkingDirectory ?? "None"}[/]");
+        AnsiConsole.Write(new Rule());
+        AnsiConsole.WriteLine();
     }
 }

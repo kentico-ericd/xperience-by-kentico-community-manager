@@ -4,46 +4,45 @@ using XperienceCommunity.Manager.Options;
 using XperienceCommunity.Manager.Steps;
 using XperienceCommunity.Manager.Wizards.Base;
 
-namespace XperienceCommunity.Manager.Wizards
+namespace XperienceCommunity.Manager.Wizards;
+
+/// <summary>
+/// A wizard which generates an <see cref="MacroOptions"/> for re-signing macros.
+/// </summary>
+public class MacroWizard : AbstractWizard<MacroOptions>
 {
-    /// <summary>
-    /// A wizard which generates an <see cref="MacroOptions"/> for re-signing macros.
-    /// </summary>
-    public class MacroWizard : AbstractWizard<MacroOptions>
+    public override Task InitSteps(params string[] args)
     {
-        public override Task InitSteps(params string[] args)
+        Steps.Add(new Step<bool>(new()
         {
-            Steps.Add(new Step<bool>(new()
+            Prompt = new ConfirmationPrompt($"[{Constants.PROMPT_COLOR}]Sign all[/] macros?")
             {
-                Prompt = new ConfirmationPrompt($"[{Constants.PROMPT_COLOR}]Sign all[/] macros?")
-                {
-                    DefaultValue = true
-                },
-                ValueReceiver = (v) => Options.SignAll = v
-            }));
+                DefaultValue = true
+            },
+            ValueReceiver = (v) => Options.SignAll = v
+        }));
 
-            Steps.Add(new Step<string>(new()
-            {
-                Prompt = new TextPrompt<string>($"[{Constants.PROMPT_COLOR}]Username[/]:"),
-                ValueReceiver = (v) => Options.UserName = v,
-                SkipChecker = () => !Options.SignAll
-            }));
+        Steps.Add(new Step<string>(new()
+        {
+            Prompt = new TextPrompt<string>($"[{Constants.PROMPT_COLOR}]Username[/]:"),
+            ValueReceiver = (v) => Options.UserName = v,
+            SkipChecker = () => !Options.SignAll
+        }));
 
-            Steps.Add(new Step<string>(new()
-            {
-                Prompt = new TextPrompt<string>($"[{Constants.PROMPT_COLOR}]Old[/] salt:"),
-                ValueReceiver = (v) => Options.OldSalt = v,
-                SkipChecker = () => Options.SignAll
-            }));
+        Steps.Add(new Step<string>(new()
+        {
+            Prompt = new TextPrompt<string>($"[{Constants.PROMPT_COLOR}]Old[/] salt:"),
+            ValueReceiver = (v) => Options.OldSalt = v,
+            SkipChecker = () => Options.SignAll
+        }));
 
-            Steps.Add(new Step<string>(new()
-            {
-                Prompt = new TextPrompt<string>($"[{Constants.PROMPT_COLOR}]New[/] salt? Leave empty to use the salt in appsettings:")
-                    .AllowEmpty(),
-                ValueReceiver = (v) => Options.NewSalt = v,
-            }));
+        Steps.Add(new Step<string>(new()
+        {
+            Prompt = new TextPrompt<string>($"[{Constants.PROMPT_COLOR}]New[/] salt? Leave empty to use the salt in appsettings:")
+                .AllowEmpty(),
+            ValueReceiver = (v) => Options.NewSalt = v,
+        }));
 
-            return Task.CompletedTask;
-        }
+        return Task.CompletedTask;
     }
 }
