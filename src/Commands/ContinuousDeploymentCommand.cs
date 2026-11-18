@@ -4,35 +4,30 @@ using Spectre.Console;
 
 using XperienceCommunity.Manager.Commands.Base;
 using XperienceCommunity.Manager.Configuration;
-using XperienceCommunity.Manager.Options;
 using XperienceCommunity.Manager.Services;
 using XperienceCommunity.Manager.Services.Interfaces;
-using XperienceCommunity.Manager.Wizards.Base;
 
 namespace XperienceCommunity.Manager.Commands
 {
     /// <summary>
-    /// A command which manages Continuous Deployment profiles and stores/restores data.
+    /// A command which stores/restores Continuous Deployment data.
     /// </summary>
     public class ContinuousDeploymentCommand : AbstractCommand
     {
         private const string STORE = "store";
         private const string RESTORE = "restore";
-        private const string CONFIG = "config";
         private readonly IShellRunner shellRunner;
         private readonly IScriptBuilder scriptBuilder;
         private readonly IConfigManager configManager;
-        private readonly ICDXmlManager cdXmlManager;
-        private readonly IWizard<RepositoryConfiguration> wizard;
 
 
         public override IEnumerable<string> Keywords => ["cd"];
 
 
-        public override IEnumerable<string> Parameters => [STORE, RESTORE, CONFIG];
+        public override IEnumerable<string> Parameters => [STORE, RESTORE];
 
 
-        public override string Description => "Stores or restores CD data, or edits the config file";
+        public override string Description => "Stores or restores CD data";
 
 
         public override bool RequiresProfile => true;
@@ -50,17 +45,13 @@ namespace XperienceCommunity.Manager.Commands
 
 
         public ContinuousDeploymentCommand(
-            IWizard<RepositoryConfiguration> wizard,
-            ICDXmlManager cdXmlManager,
             IShellRunner shellRunner,
             IScriptBuilder scriptBuilder,
             IConfigManager configManager)
         {
-            this.wizard = wizard;
             this.shellRunner = shellRunner;
             this.scriptBuilder = scriptBuilder;
             this.configManager = configManager;
-            this.cdXmlManager = cdXmlManager;
         }
 
 
@@ -84,11 +75,7 @@ namespace XperienceCommunity.Manager.Commands
 
             var config = await configManager.GetConfig();
             await EnsureCDStructure(profile, config);
-            if (action?.Equals(CONFIG, StringComparison.OrdinalIgnoreCase) ?? false)
-            {
-                await ConfigureXml(config, profile);
-            }
-            else if (action?.Equals(STORE, StringComparison.OrdinalIgnoreCase) ?? false)
+            if (action?.Equals(STORE, StringComparison.OrdinalIgnoreCase) ?? false)
             {
                 await AnsiConsole.Progress()
                     .Columns(
@@ -135,40 +122,6 @@ namespace XperienceCommunity.Manager.Commands
             }
 
             await base.PostExecute(profile, action);
-        }
-
-
-        private async Task ConfigureXml(ToolConfiguration toolConfig, ToolProfile? profile)
-        {
-            if (StopProcessing)
-            {
-                return;
-            }
-
-            if (string.IsNullOrEmpty(profile?.ProjectName))
-            {
-                LogError("Unable to load profile name.");
-
-                return;
-            }
-
-            ContinuousDeploymentConfig cdConfig = new()
-            {
-                ConfigPath = Path.Combine(toolConfig.CDRootPath, profile.ProjectName, Constants.CD_CONFIG_NAME),
-                RepositoryPath = Path.Combine(toolConfig.CDRootPath, profile.ProjectName, Constants.CD_FILES_DIR)
-            };
-
-            var repoConfig = await cdXmlManager.GetConfig(cdConfig.ConfigPath);
-            if (repoConfig is null)
-            {
-                LogError("Unable to read repository configuration.");
-
-                return;
-            }
-
-            wizard.Options = repoConfig;
-            var options = await wizard.Run();
-            cdXmlManager.WriteConfig(options, cdConfig.ConfigPath);
         }
 
 
