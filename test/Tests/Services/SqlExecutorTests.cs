@@ -4,9 +4,10 @@ using NSubstitute;
 
 using NUnit.Framework;
 
-using Xperience.Manager.Services;
+using XperienceCommunity.Manager.Services;
+using XperienceCommunity.Manager.Services.Interfaces;
 
-namespace Xperience.Manager.Tests.Services
+namespace XperienceCommunity.Manager.Tests.Tests.Services
 {
     /// <summary>
     /// Tests for <see cref="SqlExecutor"/>.
@@ -43,6 +44,14 @@ WHERE
         }
 
 
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
+        {
+            command.Dispose();
+            connection.Dispose();
+        }
+
+
         [Test]
         public async Task ExecuteQuery_ValidScript_ExecutesAndReturnsData()
         {
@@ -65,18 +74,18 @@ WHERE
 
 
         [Test]
-        public void ExecuteQuery_InvalidScript_Throws()
+        public async Task ExecuteQuery_InvalidScript_Throws()
         {
             var factory = GetFactory();
             var sqlExecutor = new SqlExecutor(factory);
             string queryName = "InvalidScript.sql";
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
-                Assert.ThrowsAsync<InvalidOperationException>(async () => await sqlExecutor.ExecuteQuery(CONN_STRING, queryName));
+                await Assert.ThrowsAsync<InvalidOperationException>(async () => await sqlExecutor.ExecuteQuery(CONN_STRING, queryName));
                 connection.DidNotReceive().Open();
                 command.DidNotReceive().ExecuteReader();
-            });
+            }
         }
 
 
@@ -124,18 +133,18 @@ WHERE
 
 
         [Test]
-        public void ExecuteNonQuery_InvalidScript_Throws()
+        public async Task ExecuteNonQuery_InvalidScript_ThrowsAsync()
         {
             var factory = GetFactory();
             var sqlExecutor = new SqlExecutor(factory);
             string queryName = "InvalidScript.sql";
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
-                Assert.ThrowsAsync<InvalidOperationException>(async () => await sqlExecutor.ExecuteNonQuery(CONN_STRING, queryName));
+                await Assert.ThrowsAsync<InvalidOperationException>(async () => await sqlExecutor.ExecuteNonQuery(CONN_STRING, queryName));
                 connection.DidNotReceive().Open();
                 command.DidNotReceive().ExecuteReader();
-            });
+            }
         }
 
 

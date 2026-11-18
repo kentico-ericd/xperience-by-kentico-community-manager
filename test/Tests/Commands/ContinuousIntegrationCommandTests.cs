@@ -2,11 +2,12 @@
 
 using NUnit.Framework;
 
-using Xperience.Manager.Commands;
-using Xperience.Manager.Configuration;
-using Xperience.Manager.Services;
+using XperienceCommunity.Manager.Commands;
+using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Services;
+using XperienceCommunity.Manager.Services.Interfaces;
 
-namespace Xperience.Manager.Tests.Commands
+namespace XperienceCommunity.Manager.Tests.Tests.Commands
 {
     /// <summary>
     /// Tests for <see cref="ContinuousIntegrationCommand"/>.

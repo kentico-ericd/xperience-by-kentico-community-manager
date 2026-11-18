@@ -1,6 +1,6 @@
-using Xperience.Manager.Configuration;
+using XperienceCommunity.Manager.Configuration;
 
-namespace Xperience.Manager.Commands
+namespace XperienceCommunity.Manager.Commands.Base
 {
     /// <summary>
     /// Describes an executable command from the CLI.

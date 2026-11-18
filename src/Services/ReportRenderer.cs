@@ -3,9 +3,10 @@
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
-using Xperience.Manager.Helpers;
+using XperienceCommunity.Manager.Helpers;
+using XperienceCommunity.Manager.Services.Interfaces;
 
-namespace Xperience.Manager.Services
+namespace XperienceCommunity.Manager.Services
 {
     public class ReportRenderer : IReportRenderer
     {
@@ -172,7 +173,7 @@ namespace Xperience.Manager.Services
         }
 
 
-        private string GetFormattedValue(JToken token)
+        private static string GetFormattedValue(JToken token)
         {
             string stringValue = token.Value<string>() ?? string.Empty;
             stringValue = stringValue.Length > MAX_COLUMN_CHARS

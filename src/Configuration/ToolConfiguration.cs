@@ -1,6 +1,6 @@
-﻿using Xperience.Manager.Options;
+﻿using XperienceCommunity.Manager.Options;
 
-namespace Xperience.Manager.Configuration
+namespace XperienceCommunity.Manager.Configuration
 {
     /// <summary>
     /// Represents the configuration of the dotnet tool.

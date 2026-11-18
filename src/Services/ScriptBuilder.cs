@@ -1,7 +1,8 @@
-﻿using Xperience.Manager.Configuration;
-using Xperience.Manager.Options;
+﻿using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Options;
+using XperienceCommunity.Manager.Services.Interfaces;
 
-namespace Xperience.Manager.Services
+namespace XperienceCommunity.Manager.Services
 {
     public class ScriptBuilder : IScriptBuilder
     {

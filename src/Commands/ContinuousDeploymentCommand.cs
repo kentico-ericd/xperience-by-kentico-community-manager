@@ -2,12 +2,14 @@
 
 using Spectre.Console;
 
-using Xperience.Manager.Configuration;
-using Xperience.Manager.Options;
-using Xperience.Manager.Services;
-using Xperience.Manager.Wizards;
+using XperienceCommunity.Manager.Commands.Base;
+using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Options;
+using XperienceCommunity.Manager.Services;
+using XperienceCommunity.Manager.Services.Interfaces;
+using XperienceCommunity.Manager.Wizards.Base;
 
-namespace Xperience.Manager.Commands
+namespace XperienceCommunity.Manager.Commands
 {
     /// <summary>
     /// A command which manages Continuous Deployment profiles and stores/restores data.
@@ -90,13 +92,12 @@ namespace Xperience.Manager.Commands
             {
                 await AnsiConsole.Progress()
                     .Columns(
-                    [
                         new SpinnerColumn(),
                         new ElapsedTimeColumn(),
                         new TaskDescriptionColumn(),
                         new ProgressBarColumn(),
                         new PercentageColumn()
-                    ])
+                    )
                     .StartAsync(async ctx =>
                     {
                         var task = ctx.AddTask($"[{Constants.EMPHASIS_COLOR}]Running the CD store script[/]");
@@ -113,11 +114,10 @@ namespace Xperience.Manager.Commands
 
                 await AnsiConsole.Progress()
                     .Columns(
-                    [
                         new SpinnerColumn(),
                         new ElapsedTimeColumn(),
                         new TaskDescriptionColumn()
-                    ])
+                    )
                     .StartAsync(async ctx =>
                     {
                         var task = ctx.AddTask($"[{Constants.EMPHASIS_COLOR}]Running the CD restore script[/]");

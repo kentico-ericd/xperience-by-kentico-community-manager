@@ -1,8 +1,9 @@
 ﻿using System.Xml.Serialization;
 
-using Xperience.Manager.Options;
+using XperienceCommunity.Manager.Options;
+using XperienceCommunity.Manager.Services.Interfaces;
 
-namespace Xperience.Manager.Services
+namespace XperienceCommunity.Manager.Services
 {
     public class CDXmlManager : ICDXmlManager
     {

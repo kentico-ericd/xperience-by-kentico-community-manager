@@ -1,6 +1,6 @@
-﻿using Xperience.Manager.Configuration;
+﻿using XperienceCommunity.Manager.Configuration;
 
-namespace Xperience.Manager.Services
+namespace XperienceCommunity.Manager.Services.Interfaces
 {
     /// <summary>
     /// Contains methods for interfacing with the application settings of a project.

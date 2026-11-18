@@ -1,9 +1,9 @@
 ﻿using NUnit.Framework;
 
-using Xperience.Manager.Configuration;
-using Xperience.Manager.Services;
+using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Services;
 
-namespace Xperience.Manager.Tests.Services
+namespace XperienceCommunity.Manager.Tests.Tests.Services
 {
     /// <summary>
     /// Tests for <see cref="ConfigManager"/>.
@@ -68,7 +68,7 @@ namespace Xperience.Manager.Tests.Services
 
 
         [Test]
-        public void AddProfile_ExistingName_ThrowsException()
+        public async Task AddProfile_ExistingName_ThrowsException()
         {
             File.Copy("Data/config_with_one_profile.json", Constants.CONFIG_FILENAME);
             ToolProfile profile = new()
@@ -78,7 +78,7 @@ namespace Xperience.Manager.Tests.Services
                 WorkingDirectory = "C:\\1"
             };
 
-            Assert.ThrowsAsync<InvalidOperationException>(async () => await configManager.AddProfile(profile));
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await configManager.AddProfile(profile));
         }
 
 

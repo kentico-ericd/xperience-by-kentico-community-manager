@@ -2,7 +2,9 @@
 
 using Microsoft.Data.SqlClient;
 
-namespace Xperience.Manager.Services
+using XperienceCommunity.Manager.Services.Interfaces;
+
+namespace XperienceCommunity.Manager.Services
 {
     public class ConnectionFactory : IConnectionFactory
     {

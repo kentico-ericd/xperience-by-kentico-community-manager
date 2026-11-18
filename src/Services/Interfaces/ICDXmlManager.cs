@@ -1,6 +1,6 @@
-﻿using Xperience.Manager.Options;
+﻿using XperienceCommunity.Manager.Options;
 
-namespace Xperience.Manager.Services
+namespace XperienceCommunity.Manager.Services.Interfaces
 {
     /// <summary>
     /// Contains methods for managing Continuous Deployment XML configuration files.

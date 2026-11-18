@@ -1,6 +1,6 @@
 ﻿using System.Xml.Serialization;
 
-namespace Xperience.Manager.Options
+namespace XperienceCommunity.Manager.Options
 {
     /// <summary>
     /// Represents the CD configuration XML file.

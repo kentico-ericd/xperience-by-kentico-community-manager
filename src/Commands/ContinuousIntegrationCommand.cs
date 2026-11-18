@@ -2,10 +2,12 @@
 
 using System.Diagnostics;
 
-using Xperience.Manager.Configuration;
-using Xperience.Manager.Services;
+using XperienceCommunity.Manager.Commands.Base;
+using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Services;
+using XperienceCommunity.Manager.Services.Interfaces;
 
-namespace Xperience.Manager.Commands
+namespace XperienceCommunity.Manager.Commands
 {
     /// <summary>
     /// A command which stores or restores Continuous Integration data.
@@ -72,13 +74,12 @@ namespace Xperience.Manager.Commands
             {
                 await AnsiConsole.Progress()
                     .Columns(
-                    [
                         new SpinnerColumn(),
                         new ElapsedTimeColumn(),
                         new TaskDescriptionColumn(),
                         new ProgressBarColumn(),
                         new PercentageColumn()
-                    ])
+                    )
                     .StartAsync(async ctx =>
                     {
                         var task = ctx.AddTask($"[{Constants.EMPHASIS_COLOR}]Running the CI store script[/]");
@@ -89,11 +90,10 @@ namespace Xperience.Manager.Commands
             {
                 await AnsiConsole.Progress()
                     .Columns(
-                    [
                         new SpinnerColumn(),
                         new ElapsedTimeColumn(),
                         new TaskDescriptionColumn()
-                    ])
+                    )
                     .StartAsync(async ctx =>
                     {
                         var task = ctx.AddTask($"[{Constants.EMPHASIS_COLOR}]Running the CI restore script[/]");

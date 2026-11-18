@@ -1,4 +1,4 @@
-﻿namespace Xperience.Manager.Configuration
+﻿namespace XperienceCommunity.Manager.Configuration
 {
     /// <summary>
     /// Represents a key from https://docs.kentico.com/documentation/developers-and-admins/configuration/reference-configuration-keys.

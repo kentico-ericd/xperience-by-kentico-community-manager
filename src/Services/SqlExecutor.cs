@@ -2,7 +2,9 @@
 
 using System.Reflection;
 
-namespace Xperience.Manager.Services
+using XperienceCommunity.Manager.Services.Interfaces;
+
+namespace XperienceCommunity.Manager.Services
 {
     public class SqlExecutor(IConnectionFactory connectionFactory) : ISqlExecutor
     {

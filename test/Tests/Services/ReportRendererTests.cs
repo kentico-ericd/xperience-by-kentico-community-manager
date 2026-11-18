@@ -2,9 +2,10 @@
 
 using NUnit.Framework;
 
-using Xperience.Manager.Services;
+using XperienceCommunity.Manager.Services;
+using XperienceCommunity.Manager.Services.Interfaces;
 
-namespace Xperience.Manager.Tests.Services
+namespace XperienceCommunity.Manager.Tests.Tests.Services
 {
     /// <summary>
     /// Tests of <see cref="ReportRenderer"/>.

@@ -2,10 +2,11 @@ using Spectre.Console;
 
 using System.Reflection;
 
-using Xperience.Manager.Configuration;
-using Xperience.Manager.Helpers;
+using XperienceCommunity.Manager.Commands.Base;
+using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Helpers;
 
-namespace Xperience.Manager.Commands
+namespace XperienceCommunity.Manager.Commands
 {
     /// <summary>
     /// A command which displays the current tool version, a list of commands, and their descriptions.
@@ -53,7 +54,7 @@ namespace Xperience.Manager.Commands
                 AnsiConsole.WriteLine($" v{v.Major}.{v.Minor}.{v.Build}");
             }
 
-            AnsiConsole.MarkupInterpolated($" [{Constants.EMPHASIS_COLOR}]https://github.com/Kentico/xperience-by-kentico-manager[/]\n");
+            AnsiConsole.MarkupInterpolated($" [{Constants.EMPHASIS_COLOR}]https://github.com/kentico-ericd/xperience-by-kentico-community-manager[/]\n");
 
             var table = new Table()
                 .AddColumn("Command")
@@ -71,7 +72,7 @@ namespace Xperience.Manager.Commands
             AnsiConsole.WriteLine();
             if (v is not null)
             {
-                var latestVersion = await NuGetVersionHelper.GetLatestVersion("Kentico.Xperience.Manager", v);
+                var latestVersion = await NuGetVersionHelper.GetLatestVersion("XperienceCommunity.Manager", v);
                 if (latestVersion is not null)
                 {
                     AnsiConsole.MarkupInterpolated($" New version [{Constants.SUCCESS_COLOR}]{latestVersion}[/] available!\n\n");

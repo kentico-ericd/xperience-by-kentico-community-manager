@@ -7,7 +7,7 @@
 		<PackageOutputPath>../dist</PackageOutputPath>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -17,20 +17,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<AssemblyToSign Include="$(IntermediateOutputPath)$(TargetFileName)" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Autofac" Version="9.1.0" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.0" />
+		<PackageReference Include="Autofac" Version="9.3.4" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.1.2" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-		<PackageReference Include="nuget.protocol" Version="7.3.1" />
-		<PackageReference Include="Spectre.Console" Version="0.55.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+		<PackageReference Include="nuget.protocol" Version="8.0.0" />
+		<PackageReference Include="Spectre.Console" Version="0.57.2" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.15" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="Scripts\**" />
 	</ItemGroup>
-
 </Project>

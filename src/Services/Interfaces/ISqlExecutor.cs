@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace Xperience.Manager.Services
+namespace XperienceCommunity.Manager.Services.Interfaces
 {
     /// <summary>
     /// Contains methods for executing SQL queries directly against a database.
@@ -12,7 +12,7 @@ namespace Xperience.Manager.Services
         /// </summary>
         /// <param name="connectionString">The connection string.</param>
         /// <param name="queryName">The name of the SQL file in the ~/Scripts folder, with the extension.</param>
-        Task<IEnumerable<JObject>> ExecuteQuery(string connectionString, string queryName);
+        public Task<IEnumerable<JObject>> ExecuteQuery(string connectionString, string queryName);
 
 
         /// <summary>
@@ -21,6 +21,6 @@ namespace Xperience.Manager.Services
         /// <param name="connectionString">The connection string.</param>
         /// <param name="queryName">The name of the SQL file in the ~/Scripts folder, with the extension.</param>
         /// <param name="parameters">Optional set of SQL parameters to apply to the query.</param>
-        Task<int> ExecuteNonQuery(string connectionString, string queryName, IDictionary<string, object>? parameters = null);
+        public Task<int> ExecuteNonQuery(string connectionString, string queryName, IDictionary<string, object>? parameters = null);
     }
 }

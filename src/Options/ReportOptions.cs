@@ -1,6 +1,6 @@
-﻿using Xperience.Manager.Commands;
+﻿using XperienceCommunity.Manager.Commands;
 
-namespace Xperience.Manager.Options
+namespace XperienceCommunity.Manager.Options
 {
     /// <summary>
     /// The options used to execute the <see cref="ReportCommand"/>. 

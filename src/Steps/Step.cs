@@ -1,6 +1,6 @@
 ﻿using Spectre.Console;
 
-namespace Xperience.Manager.Steps
+namespace XperienceCommunity.Manager.Steps
 {
     /// <summary>
     /// A step used to display a prompt for user interaction and optionally return the value.

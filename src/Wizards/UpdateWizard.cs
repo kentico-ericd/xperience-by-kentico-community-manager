@@ -1,10 +1,11 @@
 using Spectre.Console;
 
-using Xperience.Manager.Helpers;
-using Xperience.Manager.Options;
-using Xperience.Manager.Steps;
+using XperienceCommunity.Manager.Helpers;
+using XperienceCommunity.Manager.Options;
+using XperienceCommunity.Manager.Steps;
+using XperienceCommunity.Manager.Wizards.Base;
 
-namespace Xperience.Manager.Wizards
+namespace XperienceCommunity.Manager.Wizards
 {
     /// <summary>
     /// A wizard which generates an <see cref="UpdateOptions"/> for updating Xperience by Kentico.

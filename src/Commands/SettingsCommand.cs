@@ -4,12 +4,13 @@ using System.Text;
 
 using Spectre.Console;
 
-using Xperience.Manager.Configuration;
-using Xperience.Manager.Options;
-using Xperience.Manager.Services;
-using Xperience.Manager.Wizards;
+using XperienceCommunity.Manager.Commands.Base;
+using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Options;
+using XperienceCommunity.Manager.Services.Interfaces;
+using XperienceCommunity.Manager.Wizards.Base;
 
-namespace Xperience.Manager.Commands
+namespace XperienceCommunity.Manager.Commands
 {
     /// <summary>
     /// A command which configures the application settings of a project.
@@ -116,7 +117,7 @@ namespace Xperience.Manager.Commands
                     return;
                 }
 
-                var propToUpdate = AnsiConsole.Prompt(new SelectionPrompt<PropertyInfo>()
+                var propToUpdate = await AnsiConsole.PromptAsync(new SelectionPrompt<PropertyInfo>()
                 .Title($"Set which [{Constants.PROMPT_COLOR}]key[/]?")
                 .PageSize(10)
                 .UseConverter(v =>
@@ -136,7 +137,7 @@ namespace Xperience.Manager.Commands
 
                 bool success = await TryUpdateHeadlessOption(headlessConfig, propToUpdate, profile, fileName);
                 updateHeadless = success &&
-                    AnsiConsole.Prompt(new ConfirmationPrompt($"Update another [{Constants.PROMPT_COLOR}]headless key[/]?")
+                    await AnsiConsole.PromptAsync(new ConfirmationPrompt($"Update another [{Constants.PROMPT_COLOR}]headless key[/]?")
                     {
                         DefaultValue = true
                     });
@@ -162,7 +163,7 @@ namespace Xperience.Manager.Commands
 
             AnsiConsole.Write(new Markup($"[{Constants.PROMPT_COLOR} underline]{connStringName}[/]\n{connString}\n\n").Centered());
 
-            string newConnString = AnsiConsole.Prompt(new TextPrompt<string>($"Enter new [{Constants.PROMPT_COLOR}]connection string[/]:"));
+            string newConnString = await AnsiConsole.PromptAsync(new TextPrompt<string>($"Enter new [{Constants.PROMPT_COLOR}]connection string[/]:"));
             await appSettingsManager.SetConnectionString(profile, connStringName, newConnString, fileName);
 
             AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Connection string updated![/]\n");
@@ -180,7 +181,7 @@ namespace Xperience.Manager.Commands
             var keys = await appSettingsManager.GetConfigurationKeys(profile, keysToList, fileName);
             while (updateSettings)
             {
-                var updatedKey = GetNewSettingsKey(keys);
+                var updatedKey = await GetNewSettingsKey(keys);
                 if (updatedKey?.ActualValue is null)
                 {
                     LogError($"Failed to set new value for key {updatedKey?.KeyName}");
@@ -191,7 +192,7 @@ namespace Xperience.Manager.Commands
                 await appSettingsManager.SetKeyValue(profile, updatedKey.KeyName, updatedKey.ActualValue, fileName);
                 AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Updated the {updatedKey.KeyName} key![/]\n");
 
-                updateSettings = AnsiConsole.Prompt(new ConfirmationPrompt($"Update another [{Constants.PROMPT_COLOR}]configuration key[/]?")
+                updateSettings = await AnsiConsole.PromptAsync(new ConfirmationPrompt($"Update another [{Constants.PROMPT_COLOR}]configuration key[/]?")
                 {
                     DefaultValue = true
                 });
@@ -199,9 +200,9 @@ namespace Xperience.Manager.Commands
         }
 
 
-        private ConfigurationKey? GetNewSettingsKey(IEnumerable<ConfigurationKey> keys)
+        private async Task<ConfigurationKey?> GetNewSettingsKey(IEnumerable<ConfigurationKey> keys)
         {
-            var keyToUpdate = AnsiConsole.Prompt(new SelectionPrompt<ConfigurationKey>()
+            var keyToUpdate = await AnsiConsole.PromptAsync(new SelectionPrompt<ConfigurationKey>()
                 .Title($"Set which [{Constants.PROMPT_COLOR}]key[/]?")
                 .PageSize(10)
                 .UseConverter(v =>
@@ -228,7 +229,7 @@ namespace Xperience.Manager.Commands
             header.AppendLine($"\n{keyToUpdate.Description}\n");
             AnsiConsole.Write(new Markup(header.ToString()).Centered());
 
-            string newValue = AnsiConsole.Prompt(new TextPrompt<string>($"New value [{Constants.EMPHASIS_COLOR}]" +
+            string newValue = await AnsiConsole.PromptAsync(new TextPrompt<string>($"New value [{Constants.EMPHASIS_COLOR}]" +
                 $"({keyToUpdate.ValueType.Name.ToLower()})[/]:"));
             object converted = Convert.ChangeType(newValue, keyToUpdate.ValueType);
             if (converted is null)
@@ -266,7 +267,7 @@ namespace Xperience.Manager.Commands
 
             AnsiConsole.Write(new Markup(header.ToString()).Centered());
 
-            string newValue = AnsiConsole.Prompt(new TextPrompt<string>($"New value [{Constants.EMPHASIS_COLOR}]" +
+            string newValue = await AnsiConsole.PromptAsync(new TextPrompt<string>($"New value [{Constants.EMPHASIS_COLOR}]" +
                 $"({propToUpdate.PropertyType.Name.ToLower()})[/]:"));
             object converted = Convert.ChangeType(newValue, propToUpdate.PropertyType);
             if (converted is null)

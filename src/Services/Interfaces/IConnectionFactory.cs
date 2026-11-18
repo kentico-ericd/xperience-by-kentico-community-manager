@@ -1,6 +1,6 @@
 ﻿using System.Data;
 
-namespace Xperience.Manager.Services
+namespace XperienceCommunity.Manager.Services.Interfaces
 {
     /// <summary>
     /// Provides methods for retrieving an <see cref="IDbConnection"/>.

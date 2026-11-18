@@ -1,7 +1,7 @@
-﻿using Xperience.Manager.Options;
-using Xperience.Manager.Steps;
+﻿using XperienceCommunity.Manager.Options;
+using XperienceCommunity.Manager.Steps;
 
-namespace Xperience.Manager.Wizards
+namespace XperienceCommunity.Manager.Wizards.Base
 {
     public interface IWizard<TOptions> where TOptions : IWizardOptions
     {

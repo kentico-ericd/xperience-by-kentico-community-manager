@@ -1,6 +1,6 @@
-﻿using Xperience.Manager.Commands;
+﻿using XperienceCommunity.Manager.Commands;
 
-namespace Xperience.Manager.Options
+namespace XperienceCommunity.Manager.Options
 {
     /// <summary>
     /// The options used to configure the application settings file, used by <see cref="SettingsCommand"/>.

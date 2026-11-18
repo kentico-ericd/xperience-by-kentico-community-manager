@@ -1,10 +1,13 @@
 using Microsoft.Data.SqlClient;
+
 using Spectre.Console;
 
-using Xperience.Manager.Configuration;
-using Xperience.Manager.Services;
+using XperienceCommunity.Manager.Commands.Base;
+using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Services;
+using XperienceCommunity.Manager.Services.Interfaces;
 
-namespace Xperience.Manager.Commands
+namespace XperienceCommunity.Manager.Commands
 {
     /// <summary>
     /// A command which deletes an Xperience by Kentico project.
@@ -59,7 +62,7 @@ namespace Xperience.Manager.Commands
 
         public override async Task Execute(ToolProfile? profile, string? action)
         {
-            deleteConfirmed = AnsiConsole.Confirm($"This will [{Constants.ERROR_COLOR}]delete[/] the current profile's physical folder " +
+            deleteConfirmed = await AnsiConsole.ConfirmAsync($"This will [{Constants.ERROR_COLOR}]delete[/] the current profile's physical folder " +
                 $"and database!\nDo you want to continue?", false);
             if (!deleteConfirmed)
             {

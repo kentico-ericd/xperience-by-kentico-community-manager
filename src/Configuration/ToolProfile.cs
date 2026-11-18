@@ -1,4 +1,4 @@
-﻿namespace Xperience.Manager.Configuration
+﻿namespace XperienceCommunity.Manager.Configuration
 {
     /// <summary>
     /// Represents the configuration of an individual Xperience by Kentico installation.

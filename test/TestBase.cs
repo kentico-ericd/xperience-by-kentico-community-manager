@@ -2,9 +2,9 @@ using System.Diagnostics;
 
 using NUnit.Framework;
 
-namespace Xperience.Manager.Tests
+namespace XperienceCommunity.Manager.Tests
 {
-    public class TestBase
+    public abstract class TestBase
     {
         [TearDown]
         public void TearDown() => File.Delete(Constants.CONFIG_FILENAME);

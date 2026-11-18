@@ -1,6 +1,6 @@
-using Xperience.Manager.Commands;
+using XperienceCommunity.Manager.Commands.Base;
 
-namespace Xperience.Manager.Repositories
+namespace XperienceCommunity.Manager.Repositories
 {
     /// <summary>
     /// Contains all <see cref="ICommand"/>s registered at startup.

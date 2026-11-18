@@ -1,6 +1,6 @@
-using Xperience.Manager.Commands;
+using XperienceCommunity.Manager.Commands.Base;
 
-namespace Xperience.Manager.Repositories
+namespace XperienceCommunity.Manager.Repositories
 {
     /// <summary>
     /// Represents a collection of <see cref="ICommand"/>s.

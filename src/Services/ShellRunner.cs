@@ -1,6 +1,8 @@
 using System.Diagnostics;
 
-namespace Xperience.Manager.Services
+using XperienceCommunity.Manager.Services.Interfaces;
+
+namespace XperienceCommunity.Manager.Services
 {
     public class ShellRunner : IShellRunner
     {

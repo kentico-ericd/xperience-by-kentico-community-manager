@@ -1,9 +1,9 @@
 using NUnit.Framework;
 
-using Xperience.Manager.Options;
-using Xperience.Manager.Services;
+using XperienceCommunity.Manager.Options;
+using XperienceCommunity.Manager.Services;
 
-namespace Xperience.Manager.Tests.Services
+namespace XperienceCommunity.Manager.Tests.Tests.Services
 {
     /// <summary>
     /// Tests for <see cref="ScriptBuilder"/>.

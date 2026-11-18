@@ -2,9 +2,9 @@
 
 using NUnit.Framework;
 
-using Xperience.Manager.Helpers;
+using XperienceCommunity.Manager.Helpers;
 
-namespace Xperience.Manager.Tests.Helpers
+namespace XperienceCommunity.Manager.Tests.Tests.Helpers
 {
     /// <summary>
     /// Tests for <see cref="AssetHelper"/>.

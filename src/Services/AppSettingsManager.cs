@@ -1,9 +1,10 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Xperience.Manager.Configuration;
+using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Services.Interfaces;
 
-namespace Xperience.Manager.Services
+namespace XperienceCommunity.Manager.Services
 {
     public class AppSettingsManager : IAppSettingsManager
     {

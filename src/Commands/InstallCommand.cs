@@ -2,13 +2,16 @@ using Spectre.Console;
 
 using System.Diagnostics;
 
-using Xperience.Manager.Configuration;
-using Xperience.Manager.Helpers;
-using Xperience.Manager.Options;
-using Xperience.Manager.Services;
-using Xperience.Manager.Wizards;
+using XperienceCommunity.Manager.Commands.Base;
+using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Helpers;
+using XperienceCommunity.Manager.Options;
+using XperienceCommunity.Manager.Services;
+using XperienceCommunity.Manager.Services.Interfaces;
+using XperienceCommunity.Manager.Wizards;
+using XperienceCommunity.Manager.Wizards.Base;
 
-namespace Xperience.Manager.Commands
+namespace XperienceCommunity.Manager.Commands
 {
     /// <summary>
     /// A command which installs new Xperience by Kentico project files and database in the current directory.
@@ -150,7 +153,7 @@ namespace Xperience.Manager.Commands
             }
 
             AnsiConsole.WriteLine();
-            newInstallationProfile.ProfileName = AnsiConsole.Prompt(
+            newInstallationProfile.ProfileName = await AnsiConsole.PromptAsync(
                 new TextPrompt<string>($"Name your new [{Constants.PROMPT_COLOR}]profile[/]:"));
 
             await configManager.AddProfile(newInstallationProfile);
@@ -239,7 +242,7 @@ namespace Xperience.Manager.Commands
             var filtered = versions.Where(v => !v.IsPrerelease && !v.IsLegacyVersion && v.Major >= 25)
                 .Select(v => v.Version)
                 .OrderByDescending(v => v);
-            var toolVersion = AnsiConsole.Prompt(new SelectionPrompt<Version>()
+            var toolVersion = await AnsiConsole.PromptAsync(new SelectionPrompt<Version>()
                     .Title($"Which [{Constants.PROMPT_COLOR}]version[/]?")
                     .PageSize(10)
                     .UseConverter(v => $"{v.Major}.{v.Minor}.{v.Build}")

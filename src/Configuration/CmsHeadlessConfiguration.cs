@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Xperience.Manager.Configuration
+namespace XperienceCommunity.Manager.Configuration
 {
     /// <summary>
     /// Represents the headless options specified in the application settings. See

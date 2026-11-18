@@ -1,11 +1,12 @@
 ﻿using Spectre.Console;
 
-using Xperience.Manager.Configuration;
-using Xperience.Manager.Options;
-using Xperience.Manager.Services;
-using Xperience.Manager.Wizards;
+using XperienceCommunity.Manager.Commands.Base;
+using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Options;
+using XperienceCommunity.Manager.Services.Interfaces;
+using XperienceCommunity.Manager.Wizards.Base;
 
-namespace Xperience.Manager.Commands
+namespace XperienceCommunity.Manager.Commands
 {
     public class ProfileCommand : AbstractCommand
     {
@@ -144,7 +145,7 @@ namespace Xperience.Manager.Commands
                 return;
             }
 
-            var profile = AnsiConsole.Prompt(new SelectionPrompt<ToolProfile>()
+            var profile = await AnsiConsole.PromptAsync(new SelectionPrompt<ToolProfile>()
                 .Title("Delete which [green]profile[/]?")
                 .PageSize(10)
                 .UseConverter(p => p.ProfileName ?? string.Empty)
@@ -173,7 +174,7 @@ namespace Xperience.Manager.Commands
                 .MoreChoicesText("Scroll for more...")
                 .AddChoices(profiles);
 
-            var newProfile = AnsiConsole.Prompt(prompt);
+            var newProfile = await AnsiConsole.PromptAsync(prompt);
             await configManager.SetCurrentProfile(newProfile);
 
             AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]Switched to '{newProfile.ProfileName}'[/]");

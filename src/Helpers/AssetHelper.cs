@@ -1,4 +1,4 @@
-﻿namespace Xperience.Manager.Helpers
+﻿namespace XperienceCommunity.Manager.Helpers
 {
     public static class AssetHelper
     {

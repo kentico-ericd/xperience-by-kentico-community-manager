@@ -1,4 +1,4 @@
-﻿namespace Xperience.Manager.Services
+﻿namespace XperienceCommunity.Manager.Services.Interfaces
 {
     /// <summary>
     /// Contains methods for rendering report tables and graphs.

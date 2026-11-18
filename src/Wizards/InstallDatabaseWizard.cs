@@ -1,9 +1,10 @@
 using Spectre.Console;
 
-using Xperience.Manager.Options;
-using Xperience.Manager.Steps;
+using XperienceCommunity.Manager.Options;
+using XperienceCommunity.Manager.Steps;
+using XperienceCommunity.Manager.Wizards.Base;
 
-namespace Xperience.Manager.Wizards
+namespace XperienceCommunity.Manager.Wizards
 {
     /// <summary>
     /// A wizard which generates an <see cref="InstallDatabaseOptions"/> for installing Xperience by Kentico databases.

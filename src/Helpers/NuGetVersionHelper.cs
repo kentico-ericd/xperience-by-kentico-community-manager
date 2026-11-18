@@ -3,7 +3,7 @@ using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 
-namespace Xperience.Manager.Helpers
+namespace XperienceCommunity.Manager.Helpers
 {
     public static class NuGetVersionHelper
     {
@@ -17,8 +17,9 @@ namespace Xperience.Manager.Helpers
         {
             var repository = Repository.Factory.GetCoreV3(NUGET_SOURCE);
             var resource = await repository.GetResourceAsync<FindPackageByIdResource>();
-
-            return await resource.GetAllVersionsAsync(
+            return resource is null
+                ? throw new InvalidOperationException($"Could not find package resource for {package}")
+                : await resource.GetAllVersionsAsync(
                 package,
                 new SourceCacheContext(),
                 NullLogger.Instance,
@@ -33,7 +34,8 @@ namespace Xperience.Manager.Helpers
         public static async Task<Version?> GetLatestVersion(string package, Version currentVersion)
         {
             var repository = Repository.Factory.GetCoreV3(NUGET_SOURCE);
-            var resource = await repository.GetResourceAsync<FindPackageByIdResource>();
+            var resource = await repository.GetResourceAsync<FindPackageByIdResource>()
+                ?? throw new InvalidOperationException($"Could not find package resource for {package}");
             var versions = await resource.GetAllVersionsAsync(
                 package,
                 new SourceCacheContext(),
