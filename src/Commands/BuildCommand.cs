@@ -10,12 +10,8 @@ namespace XperienceCommunity.Manager.Commands;
 /// <summary>
 /// A command which builds an Xperience by Kentico project.
 /// </summary>
-public class BuildCommand : AbstractCommand
+public class BuildCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilder) : AbstractCommand
 {
-    private readonly IShellRunner shellRunner;
-    private readonly IScriptBuilder scriptBuilder;
-
-
     public override IEnumerable<string> Keywords => ["b", "build"];
 
 
@@ -29,21 +25,11 @@ public class BuildCommand : AbstractCommand
 
 
     /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-    /// into the constuctor.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
     /// </summary>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal BuildCommand()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    {
-    }
-
-
-    public BuildCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilder)
-    {
-        this.shellRunner = shellRunner;
-        this.scriptBuilder = scriptBuilder;
-    }
+#pragma warning disable CS8625
+    internal BuildCommand() : this(null, null) { }
+#pragma warning restore CS8625
 
 
     public override async Task Execute(ToolProfile? profile, string? action) => await BuildProject(profile);

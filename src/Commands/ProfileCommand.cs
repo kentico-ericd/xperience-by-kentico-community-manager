@@ -8,13 +8,11 @@ using XperienceCommunity.Manager.Wizards.Base;
 
 namespace XperienceCommunity.Manager.Commands;
 
-public class ProfileCommand : AbstractCommand
+public class ProfileCommand(IConfigManager configManager, IWizard<NewProfileOptions> wizard) : AbstractCommand
 {
     private const string ADD = "add";
     private const string DELETE = "delete";
     private const string SWITCH = "switch";
-    private readonly IConfigManager configManager;
-    private readonly IWizard<NewProfileOptions> wizard;
 
 
     public override IEnumerable<string> Keywords => ["p", "profile"];
@@ -27,21 +25,11 @@ public class ProfileCommand : AbstractCommand
 
 
     /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-    /// into the constuctor.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
     /// </summary>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal ProfileCommand()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    {
-    }
-
-
-    public ProfileCommand(IConfigManager configManager, IWizard<NewProfileOptions> wizard)
-    {
-        this.configManager = configManager;
-        this.wizard = wizard;
-    }
+#pragma warning disable CS8625
+    internal ProfileCommand() : this(null, null) { }
+#pragma warning restore CS8625
 
 
     public override async Task PreExecute(ToolProfile? profile, string? action)

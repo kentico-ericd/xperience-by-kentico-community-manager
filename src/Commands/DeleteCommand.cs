@@ -12,14 +12,14 @@ namespace XperienceCommunity.Manager.Commands;
 /// <summary>
 /// A command which deletes an Xperience by Kentico project.
 /// </summary>
-public class DeleteCommand : AbstractCommand
+public class DeleteCommand(
+    IShellRunner shellRunner,
+    ISqlExecutor sqlExecutor,
+    IScriptBuilder scriptBuilder,
+    IConfigManager configManager,
+    IAppSettingsManager appSettingsManager) : AbstractCommand
 {
     private bool deleteConfirmed;
-    private readonly IShellRunner shellRunner;
-    private readonly ISqlExecutor sqlExecutor;
-    private readonly IScriptBuilder scriptBuilder;
-    private readonly IConfigManager configManager;
-    private readonly IAppSettingsManager appSettingsManager;
 
 
     public override IEnumerable<string> Keywords => ["d", "delete"];
@@ -35,29 +35,11 @@ public class DeleteCommand : AbstractCommand
 
 
     /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-    /// into the constuctor.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
     /// </summary>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal DeleteCommand()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    {
-    }
-
-
-    public DeleteCommand(
-        IShellRunner shellRunner,
-        ISqlExecutor sqlExecutor,
-        IScriptBuilder scriptBuilder,
-        IConfigManager configManager,
-        IAppSettingsManager appSettingsManager)
-    {
-        this.shellRunner = shellRunner;
-        this.sqlExecutor = sqlExecutor;
-        this.scriptBuilder = scriptBuilder;
-        this.configManager = configManager;
-        this.appSettingsManager = appSettingsManager;
-    }
+#pragma warning disable CS8625
+    internal DeleteCommand() : this(null, null, null, null, null) { }
+#pragma warning restore CS8625
 
 
     public override async Task Execute(ToolProfile? profile, string? action)

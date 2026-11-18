@@ -15,12 +15,9 @@ namespace XperienceCommunity.Manager.Commands;
 /// <summary>
 /// A command which configures the application settings of a project.
 /// </summary>
-public class SettingsCommand : AbstractCommand
+public class SettingsCommand(IAppSettingsManager appSettingsManager, IWizard<SettingsOptions> wizard) : AbstractCommand
 {
     private const int MAX_HINT_LENGTH = 16;
-    private readonly IWizard<SettingsOptions> wizard;
-    private readonly IAppSettingsManager appSettingsManager;
-
 
     public override IEnumerable<string> Keywords => ["s", "settings"];
 
@@ -35,21 +32,11 @@ public class SettingsCommand : AbstractCommand
 
 
     /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-    /// into the constuctor.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
     /// </summary>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal SettingsCommand()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    {
-    }
-
-
-    public SettingsCommand(IAppSettingsManager appSettingsManager, IWizard<SettingsOptions> wizard)
-    {
-        this.wizard = wizard;
-        this.appSettingsManager = appSettingsManager;
-    }
+#pragma warning disable CS8625
+    internal SettingsCommand() : this(null, null) { }
+#pragma warning restore CS8625
 
 
     public override async Task Execute(ToolProfile? profile, string? action)

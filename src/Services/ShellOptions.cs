@@ -2,12 +2,15 @@
 
 namespace XperienceCommunity.Manager.Services;
 
-public class ShellOptions
+/// <summary>
+/// Initializes a new instance of <see cref="ShellOptions"/> and sets the <see cref="Script"/>.
+/// </summary>
+public class ShellOptions(string script)
 {
     /// <summary>
     /// The script to execute.
     /// </summary>
-    public string Script { get; private set; }
+    public string Script { get; private set; } = script;
 
 
     /// <summary>
@@ -32,10 +35,4 @@ public class ShellOptions
     /// The handler called when the script outputs data.
     /// </summary>
     public DataReceivedEventHandler? OutputHandler { get; set; }
-
-
-    /// <summary>
-    /// Initializes a new instance of <see cref="ShellOptions"/> and sets the <see cref="Script"/>.
-    /// </summary>
-    public ShellOptions(string script) => Script = script;
 }

@@ -12,13 +12,8 @@ namespace XperienceCommunity.Manager.Commands;
 /// <summary>
 /// A command which allows re-signing of macros.
 /// </summary>
-public class MacroCommand : AbstractCommand
+public class MacroCommand(IWizard<MacroOptions> wizard, IShellRunner shellRunner, IScriptBuilder scriptBuilder) : AbstractCommand
 {
-    private readonly IShellRunner shellRunner;
-    private readonly IScriptBuilder scriptBuilder;
-    private readonly IWizard<MacroOptions> wizard;
-
-
     public override IEnumerable<string> Keywords => ["m", "macros"];
 
 
@@ -32,22 +27,11 @@ public class MacroCommand : AbstractCommand
 
 
     /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-    /// into the constuctor.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
     /// </summary>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal MacroCommand()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    {
-    }
-
-
-    public MacroCommand(IWizard<MacroOptions> wizard, IShellRunner shellRunner, IScriptBuilder scriptBuilder)
-    {
-        this.wizard = wizard;
-        this.shellRunner = shellRunner;
-        this.scriptBuilder = scriptBuilder;
-    }
+#pragma warning disable CS8625
+    internal MacroCommand() : this(null, null, null) { }
+#pragma warning restore CS8625
 
 
     public override async Task Execute(ToolProfile? profile, string? action)

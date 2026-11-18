@@ -16,15 +16,15 @@ namespace XperienceCommunity.Manager.Commands;
 /// <summary>
 /// A command which installs new Xperience by Kentico project files and database in the current directory.
 /// </summary>
-public class InstallCommand : AbstractCommand
+public class InstallCommand(
+    IShellRunner shellRunner,
+    IScriptBuilder scriptBuilder,
+    IWizard<InstallProjectOptions> projectWizard,
+    IWizard<InstallDatabaseOptions> dbWizard,
+    IConfigManager configManager) : AbstractCommand
 {
     private const string DATABASE = "db";
     private readonly ToolProfile newInstallationProfile = new();
-    private readonly IShellRunner shellRunner;
-    private readonly IConfigManager configManager;
-    private readonly IScriptBuilder scriptBuilder;
-    private readonly IWizard<InstallProjectOptions> projectWizard;
-    private readonly IWizard<InstallDatabaseOptions> dbWizard;
 
 
     public override IEnumerable<string> Keywords => ["i", "install"];
@@ -37,29 +37,11 @@ public class InstallCommand : AbstractCommand
 
 
     /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-    /// into the constuctor.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
     /// </summary>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal InstallCommand()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    {
-    }
-
-
-    public InstallCommand(
-        IShellRunner shellRunner,
-        IScriptBuilder scriptBuilder,
-        IWizard<InstallProjectOptions> projectWizard,
-        IWizard<InstallDatabaseOptions> dbWizard,
-        IConfigManager configManager)
-    {
-        this.dbWizard = dbWizard;
-        this.projectWizard = projectWizard;
-        this.shellRunner = shellRunner;
-        this.configManager = configManager;
-        this.scriptBuilder = scriptBuilder;
-    }
+#pragma warning disable CS8625
+    internal InstallCommand() : this(null, null, null, null, null) { }
+#pragma warning restore CS8625
 
 
     public override async Task Execute(ToolProfile? profile, string? action)

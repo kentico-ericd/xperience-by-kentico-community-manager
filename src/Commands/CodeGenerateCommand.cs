@@ -12,13 +12,8 @@ namespace XperienceCommunity.Manager.Commands;
 /// <summary>
 /// A command which generates code files for Xperience by Kentico object types.
 /// </summary>
-public class CodeGenerateCommand : AbstractCommand
+public class CodeGenerateCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilder, IWizard<CodeGenerateOptions> wizard) : AbstractCommand
 {
-    private readonly IShellRunner shellRunner;
-    private readonly IScriptBuilder scriptBuilder;
-    private readonly IWizard<CodeGenerateOptions> wizard;
-
-
     public override IEnumerable<string> Keywords => ["g", "generate"];
 
 
@@ -32,22 +27,11 @@ public class CodeGenerateCommand : AbstractCommand
 
 
     /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-    /// into the constuctor.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
     /// </summary>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal CodeGenerateCommand()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    {
-    }
-
-
-    public CodeGenerateCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilder, IWizard<CodeGenerateOptions> wizard)
-    {
-        this.wizard = wizard;
-        this.shellRunner = shellRunner;
-        this.scriptBuilder = scriptBuilder;
-    }
+#pragma warning disable CS8625
+    internal CodeGenerateCommand() : this(null, null, null) { }
+#pragma warning restore CS8625
 
 
     public override async Task Execute(ToolProfile? profile, string? action)

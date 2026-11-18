@@ -8,13 +8,8 @@ using XperienceCommunity.Manager.Wizards.Base;
 
 namespace XperienceCommunity.Manager.Commands;
 
-public class ReportCommand : AbstractCommand
+public class ReportCommand(IReportRenderer reportRenderer, IAppSettingsManager appSettingsManager, IWizard<ReportOptions> wizard) : AbstractCommand
 {
-    private readonly IReportRenderer reportRenderer;
-    private readonly IAppSettingsManager appSettingsManager;
-    private readonly IWizard<ReportOptions> wizard;
-
-
     public override IEnumerable<string> Keywords => ["r", "report"];
 
 
@@ -28,22 +23,11 @@ public class ReportCommand : AbstractCommand
 
 
     /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-    /// into the constuctor.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
     /// </summary>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal ReportCommand()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    {
-    }
-
-
-    public ReportCommand(IReportRenderer reportRenderer, IAppSettingsManager appSettingsManager, IWizard<ReportOptions> wizard)
-    {
-        this.reportRenderer = reportRenderer;
-        this.appSettingsManager = appSettingsManager;
-        this.wizard = wizard;
-    }
+#pragma warning disable CS8625
+    internal ReportCommand() : this(null, null, null) { }
+#pragma warning restore CS8625
 
 
     public override Task Execute(ToolProfile? profile, string? action) => RunReport(profile);

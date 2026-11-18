@@ -110,6 +110,6 @@ public class InstallDatabaseOptions : IWizardOptions
                 rcs[rand.Next(0, rcs.Length)]);
         }
 
-        return new string(chars.ToArray());
+        return new string([.. chars]);
     }
 }

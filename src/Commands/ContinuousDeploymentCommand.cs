@@ -12,13 +12,10 @@ namespace XperienceCommunity.Manager.Commands;
 /// <summary>
 /// A command which stores/restores Continuous Deployment data.
 /// </summary>
-public class ContinuousDeploymentCommand : AbstractCommand
+public class ContinuousDeploymentCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilder, IConfigManager configManager) : AbstractCommand
 {
     private const string STORE = "store";
     private const string RESTORE = "restore";
-    private readonly IShellRunner shellRunner;
-    private readonly IScriptBuilder scriptBuilder;
-    private readonly IConfigManager configManager;
 
 
     public override IEnumerable<string> Keywords => ["cd"];
@@ -34,25 +31,11 @@ public class ContinuousDeploymentCommand : AbstractCommand
 
 
     /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-    /// into the constuctor.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
     /// </summary>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal ContinuousDeploymentCommand()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    {
-    }
-
-
-    public ContinuousDeploymentCommand(
-        IShellRunner shellRunner,
-        IScriptBuilder scriptBuilder,
-        IConfigManager configManager)
-    {
-        this.shellRunner = shellRunner;
-        this.scriptBuilder = scriptBuilder;
-        this.configManager = configManager;
-    }
+#pragma warning disable CS8625
+    internal ContinuousDeploymentCommand() : this(null, null, null) { }
+#pragma warning restore CS8625
 
 
     public override async Task PreExecute(ToolProfile? profile, string? action)

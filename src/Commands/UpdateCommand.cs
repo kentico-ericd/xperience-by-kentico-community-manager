@@ -13,11 +13,8 @@ namespace XperienceCommunity.Manager.Commands;
 /// A command which updates the NuGet packages and database of the Xperience by Kentico project in
 /// the current directory.
 /// </summary>
-public class UpdateCommand : AbstractCommand
+public class UpdateCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilder, IWizard<UpdateOptions> wizard) : AbstractCommand
 {
-    private readonly IShellRunner shellRunner;
-    private readonly IScriptBuilder scriptBuilder;
-    private readonly IWizard<UpdateOptions> wizard;
     private readonly IEnumerable<string> packageNames =
     [
         "kentico.xperience.admin",
@@ -43,22 +40,11 @@ public class UpdateCommand : AbstractCommand
 
 
     /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-    /// into the constuctor.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
     /// </summary>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal UpdateCommand()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    {
-    }
-
-
-    public UpdateCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilder, IWizard<UpdateOptions> wizard)
-    {
-        this.wizard = wizard;
-        this.shellRunner = shellRunner;
-        this.scriptBuilder = scriptBuilder;
-    }
+#pragma warning disable CS8625
+    internal UpdateCommand() : this(null, null, null) { }
+#pragma warning restore CS8625
 
 
     public override async Task Execute(ToolProfile? profile, string? action)

@@ -12,12 +12,10 @@ namespace XperienceCommunity.Manager.Commands;
 /// <summary>
 /// A command which stores or restores Continuous Integration data.
 /// </summary>
-public class ContinuousIntegrationCommand : AbstractCommand
+public class ContinuousIntegrationCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilder) : AbstractCommand
 {
     private const string STORE = "store";
     private const string RESTORE = "restore";
-    private readonly IShellRunner shellRunner;
-    private readonly IScriptBuilder scriptBuilder;
 
 
     public override IEnumerable<string> Keywords => ["ci"];
@@ -33,21 +31,11 @@ public class ContinuousIntegrationCommand : AbstractCommand
 
 
     /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-    /// into the constuctor.
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
     /// </summary>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal ContinuousIntegrationCommand()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    {
-    }
-
-
-    public ContinuousIntegrationCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilder)
-    {
-        this.shellRunner = shellRunner;
-        this.scriptBuilder = scriptBuilder;
-    }
+#pragma warning disable CS8625
+    internal ContinuousIntegrationCommand() : this(null, null) { }
+#pragma warning restore CS8625
 
 
     public override async Task PreExecute(ToolProfile? profile, string? action)

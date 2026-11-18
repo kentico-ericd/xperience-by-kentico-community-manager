@@ -8,18 +8,11 @@ using XperienceCommunity.Manager.Services.Interfaces;
 
 namespace XperienceCommunity.Manager.Services;
 
-public class ReportRenderer : IReportRenderer
+public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
 {
     private const int BAR_CHART_WIDTH = 100;
     private const int MAX_COLUMN_CHARS = 200;
-    private readonly ISqlExecutor sqlExecutor;
-
-
     private static TableBorder BorderStyle => TableBorder.Minimal;
-
-
-    public ReportRenderer(ISqlExecutor sqlExecutor) =>
-        this.sqlExecutor = sqlExecutor;
 
 
     public async Task RenderAdminUserReport(string connectionString)
