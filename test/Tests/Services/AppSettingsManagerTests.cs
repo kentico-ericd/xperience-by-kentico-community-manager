@@ -28,11 +28,11 @@ public class AppSettingsManagerTests
         string? defaultConnectionString = await appSettingsManager.GetConnectionString(profile, "CMSConnectionString");
         string? devConnectionString = await appSettingsManager.GetConnectionString(profile, "CMSConnectionString", DEVELOPMENT_FILE);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(defaultConnectionString, Is.EqualTo(expectedDefaultConnectionString));
             Assert.That(devConnectionString, Is.EqualTo(expectedDevelopmentConnectionString));
-        });
+        }
     }
 
 
@@ -41,11 +41,11 @@ public class AppSettingsManagerTests
     {
         var headlessConfig = await appSettingsManager.GetCmsHeadlessConfiguration(profile);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(headlessConfig.Enable, Is.True);
             Assert.That(headlessConfig.Caching.SlidingExpiration, Is.EqualTo(60));
-        });
+        }
     }
 
 
@@ -57,12 +57,12 @@ public class AppSettingsManagerTests
         var returnedKeys = await appSettingsManager.GetConfigurationKeys(profile, [keyToRetrieve]);
         var logKeepKey = returnedKeys.FirstOrDefault();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(logKeepKey, Is.Not.Null);
             Assert.That(logKeepKey?.ActualValue, Is.Null);
             Assert.That(logKeepKey?.DefaultValue, Is.EqualTo(logKeepDefaultValue));
-        });
+        }
     }
 
 
@@ -78,11 +78,11 @@ public class AppSettingsManagerTests
         var developmentReturnedKeys = await appSettingsManager.GetConfigurationKeys(profile, [keyToRetrieve], DEVELOPMENT_FILE);
         object? developmentHashStringValue = developmentReturnedKeys.FirstOrDefault()?.ActualValue;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(defaultHashStringValue?.ToString(), Is.EqualTo(expectedDefaultHashString));
             Assert.That(developmentHashStringValue?.ToString(), Is.EqualTo(expectedDevelopmentHashString));
-        });
+        }
     }
 
 
@@ -112,11 +112,11 @@ public class AppSettingsManagerTests
         string? updatedDefaultConnectionString = await appSettingsManager.GetConnectionString(profile, connectionStringName);
         string? updatedDevelopmentConnectionString = await appSettingsManager.GetConnectionString(profile, connectionStringName, DEVELOPMENT_FILE);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(updatedDefaultConnectionString, Is.EqualTo(expectedDefaultConnectionString));
             Assert.That(updatedDevelopmentConnectionString?.ToString(), Is.EqualTo(expectedDevelopmentConnectionString));
-        });
+        }
     }
 
 
@@ -135,10 +135,10 @@ public class AppSettingsManagerTests
         var updatedDevelopmentKeys = await appSettingsManager.GetConfigurationKeys(profile, [keyToRetrieve], DEVELOPMENT_FILE);
         object? updatedDevelopmentAzureAccountName = updatedDevelopmentKeys.FirstOrDefault()?.ActualValue;
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(updatedDefaultAzureAccountName?.ToString(), Is.EqualTo(expectedAzureAccountName));
             Assert.That(updatedDevelopmentAzureAccountName?.ToString(), Is.EqualTo(expectedAzureAccountName));
-        });
+        }
     }
 }

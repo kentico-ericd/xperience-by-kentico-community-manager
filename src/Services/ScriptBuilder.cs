@@ -38,6 +38,17 @@ public class ScriptBuilder : IScriptBuilder
     private const string DELETE_FOLDER_SCRIPT = $"rm \"{nameof(ToolProfile.WorkingDirectory)}\" -r -Force";
 
 
+    public IScriptBuilder AppendAllowScripts(bool allowScripts)
+    {
+        if (currentScriptType.Equals(ScriptType.ProjectInstall) && allowScripts)
+        {
+            currentScript += " --allow-scripts yes";
+        }
+
+        return this;
+    }
+
+
     public IScriptBuilder AppendCloud(bool useCloud)
     {
         if (currentScriptType.Equals(ScriptType.ProjectInstall) && useCloud)

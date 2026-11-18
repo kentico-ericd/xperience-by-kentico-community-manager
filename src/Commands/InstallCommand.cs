@@ -1,7 +1,5 @@
 using Spectre.Console;
 
-using System.Diagnostics;
-
 using XperienceCommunity.Manager.Commands.Base;
 using XperienceCommunity.Manager.Configuration;
 using XperienceCommunity.Manager.Helpers;
@@ -186,28 +184,18 @@ public class InstallCommand(
 
         AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Running project creation script...[/]");
 
+        // The MVC templates have a script post-action ("dotnet tool restore") which prompts for confirmation unless
+        // allowed up front. The admin template has no such action and rejects the --allow-scripts option.
         string installScript = scriptBuilder.SetScript(ScriptType.ProjectInstall)
             .WithPlaceholders(options)
+            .AppendAllowScripts(!IsAdminTemplate(options))
             .AppendCloud(options.UseCloud)
             .Build();
 
-        // Admin boilerplate script doesn't require input
-        bool keepOpen = !IsAdminTemplate(options);
         await shellRunner.Execute(new(installScript)
         {
-            KeepOpen = keepOpen,
             WorkingDirectory = newInstallationProfile.WorkingDirectory,
-            ErrorHandler = ErrorDataReceived,
-            OutputHandler = (o, e) =>
-            {
-                var proc = o as Process;
-                if (e.Data?.Contains("Do you want to run this action", StringComparison.OrdinalIgnoreCase) ?? false)
-                {
-                    // Restore packages when prompted
-                    proc?.StandardInput.WriteLine("Y");
-                    proc?.StandardInput.Close();
-                }
-            }
+            ErrorHandler = ErrorDataReceived
         }).WaitForExitAsync();
     }
 

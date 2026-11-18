@@ -23,12 +23,12 @@ public class ShellRunnerTests
         var proc = shellRunner.Execute(new($"dotnet new install {invalidPackage}") { ErrorHandler = (o, e) => builder.Append(e.Data) });
         proc.WaitForExit();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(proc.HasExited);
             Assert.That(proc.StartInfo.RedirectStandardError);
             Assert.That(builder.ToString(), Contains.Substring($"{invalidPackage} could not be installed, the package does not exist"));
-        });
+        }
     }
 
 
@@ -51,10 +51,10 @@ public class ShellRunnerTests
         });
         proc.WaitForExit();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(proc.HasExited);
             Assert.That(proc.StartInfo.RedirectStandardOutput);
-        });
+        }
     }
 }

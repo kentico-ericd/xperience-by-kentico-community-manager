@@ -67,19 +67,19 @@ public class InstallCommandTests : TestBase
         await command.PreExecute(new(), string.Empty);
         await command.Execute(new(), string.Empty);
 
-        string expectedProjectFileScript = $"dotnet new {TEMPLATE} -n {PROJECT_NAME}";
+        string expectedProjectFileScript = $"dotnet new {TEMPLATE} -n {PROJECT_NAME} --allow-scripts yes";
         string expectedUninstallScript = "dotnet new uninstall kentico.xperience.templates";
         string expectedTemplateScript = $"dotnet new install kentico.xperience.templates::{version}";
         string expectedDatabaseScript = $"dotnet kentico-xperience-dbmanager -- -s \"{SERVER_NAME}\" -d \"{DB_NAME}\" -a " +
             $"\"{ADMIN_PASSWORD}\" --use-existing-database {USE_EXISTING}";
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             shellRunner.Received().Execute(Arg.Is<ShellOptions>(x => x.Script.Equals(expectedProjectFileScript)));
             shellRunner.Received().Execute(Arg.Is<ShellOptions>(x => x.Script.Equals(expectedUninstallScript)));
             shellRunner.Received().Execute(Arg.Is<ShellOptions>(x => x.Script.Equals(expectedTemplateScript)));
             shellRunner.Received().Execute(Arg.Is<ShellOptions>(x => x.Script.Equals(expectedDatabaseScript)));
-        });
+        }
     }
 
 

@@ -31,13 +31,13 @@ public class ConfigManagerTests : TestBase
         var config = await configManager.GetConfig();
 
         Assert.That(profile, Is.Not.Null);
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(profile.ProfileName, Is.EqualTo("1"));
             Assert.That(profile.ProjectName, Is.EqualTo("site1"));
             Assert.That(profile.WorkingDirectory, Is.EqualTo("C:\\1"));
             Assert.That(config.CurrentProfile, Is.EqualTo("1"));
-        });
+        }
     }
 
 
@@ -108,13 +108,13 @@ public class ConfigManagerTests : TestBase
         var dbOptions = await configManager.GetDefaultInstallDatabaseOptions();
         var projectOptions = await configManager.GetDefaultInstallProjectOptions();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(dbOptions.DatabaseName, Is.EqualTo("mydb"));
             Assert.That(dbOptions.ServerName, Is.EqualTo("myserver"));
             Assert.That(projectOptions.UseCloud, Is.True);
             Assert.That(projectOptions.ProjectName, Is.EqualTo("myproject"));
             Assert.That(projectOptions.Template, Is.EqualTo("kentico-xperience-sample-mvc"));
-        });
+        }
     }
 }

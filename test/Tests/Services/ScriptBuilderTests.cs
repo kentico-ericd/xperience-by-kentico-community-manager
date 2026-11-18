@@ -36,6 +36,33 @@ public class ScriptBuilderTests
 
 
     [Test]
+    public void ProjectInstallScript_AppendAllowScripts_AddsParameter()
+    {
+        string script = scriptBuilder.SetScript(ScriptType.ProjectInstall)
+            .WithPlaceholders(validProjectOptions)
+            .AppendAllowScripts(true)
+            .AppendCloud(true)
+            .Build();
+        string expected = $"dotnet new {validProjectOptions.Template} -n {validProjectOptions.ProjectName} --allow-scripts yes --cloud";
+
+        Assert.That(script, Is.EqualTo(expected));
+    }
+
+
+    [Test]
+    public void ProjectInstallScript_AppendAllowScriptsFalse_DoesNotAddParameter()
+    {
+        string script = scriptBuilder.SetScript(ScriptType.ProjectInstall)
+            .WithPlaceholders(validProjectOptions)
+            .AppendAllowScripts(false)
+            .Build();
+        string expected = $"dotnet new {validProjectOptions.Template} -n {validProjectOptions.ProjectName}";
+
+        Assert.That(script, Is.EqualTo(expected));
+    }
+
+
+    [Test]
     public void TemplateInstall_AppendVersion_AddsParameter()
     {
         var version = new Version(1, 0, 0);

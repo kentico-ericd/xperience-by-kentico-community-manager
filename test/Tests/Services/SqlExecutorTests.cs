@@ -60,7 +60,7 @@ WHERE
 
         var data = await sqlExecutor.ExecuteQuery(CONN_STRING, VALID_SCRIPT);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             connection.Received().Open();
             command.Received().ExecuteReader();
@@ -69,7 +69,7 @@ WHERE
             Assert.That(data.FirstOrDefault()?.Property(COL_1)?.Value.ToString(), Is.EqualTo(VAL_1));
             Assert.That(data.FirstOrDefault()?.Property(COL_2)?.Value.ToString(), Is.EqualTo(VAL_2));
 
-        });
+        }
     }
 
 
@@ -97,13 +97,13 @@ WHERE
 
         await sqlExecutor.ExecuteNonQuery(CONN_STRING, VALID_SCRIPT);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             connection.Received().Open();
             command.Received().ExecuteNonQuery();
             Assert.That(command.CommandText, Is.EqualTo(SCRIPT_TEXT));
 
-        });
+        }
     }
 
 
@@ -121,14 +121,14 @@ WHERE
 
         await sqlExecutor.ExecuteNonQuery(CONN_STRING, VALID_SCRIPT, parameters);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             connection.Received().Open();
             command.Received().ExecuteNonQuery();
             Assert.That(parameter.ParameterName, Is.EqualTo(param1Name));
             Assert.That(parameter.Value, Is.EqualTo(param1Value));
 
-        });
+        }
     }
 
 

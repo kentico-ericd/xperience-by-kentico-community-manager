@@ -6,6 +6,14 @@ namespace XperienceCommunity.Manager.Services.Interfaces;
 public interface IScriptBuilder : IService
 {
     /// <summary>
+    /// Appends " --allow-scripts yes" to the script if <paramref name="allowScripts"/> is true, so that template
+    /// post-actions run without an interactive prompt. Only pass <c>true</c> for templates which define a script
+    /// post-action, as <c>dotnet new</c> rejects the option for other templates.
+    /// </summary>
+    public IScriptBuilder AppendAllowScripts(bool allowScripts);
+
+
+    /// <summary>
     /// Appends " --cloud" to the script if <paramref name="useCloud"/> is true.
     /// </summary>
     public IScriptBuilder AppendCloud(bool useCloud);
