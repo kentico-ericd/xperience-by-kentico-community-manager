@@ -59,7 +59,7 @@ public class UpdateCommandTests : TestBase
         foreach (string p in packageNames)
         {
             shellRunner.Received().Execute(Arg.Is<ShellOptions>(x => x.Script.Equals(
-                $"dotnet add package {p} --version {version} --project \"{PROJECT}.csproj\"")));
+                $"dotnet add package '{p}' --version {version} --project '{PROJECT}.csproj'")));
         }
     }
 }

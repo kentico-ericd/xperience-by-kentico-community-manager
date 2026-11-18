@@ -112,6 +112,13 @@ public class DeleteCommand(
             return;
         }
 
+        if (string.IsNullOrEmpty(profile?.WorkingDirectory))
+        {
+            LogError("Couldn't load working directory.");
+
+            return;
+        }
+
         AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Deleting local files...[/]");
 
         string uninstallScript = scriptBuilder.SetScript(ScriptType.DeleteDirectory).WithPlaceholders(profile).Build();

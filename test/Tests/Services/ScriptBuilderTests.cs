@@ -29,7 +29,7 @@ public class ScriptBuilderTests
     public void ProjectInstallScript_WithValidOptions_ReturnsValidScript()
     {
         string script = scriptBuilder.SetScript(ScriptType.ProjectInstall).WithPlaceholders(validProjectOptions).Build();
-        string expected = $"dotnet new {validProjectOptions.Template} -n {validProjectOptions.ProjectName}";
+        string expected = $"dotnet new '{validProjectOptions.Template}' -n '{validProjectOptions.ProjectName}'";
 
         Assert.That(script, Is.EqualTo(expected));
     }
@@ -43,7 +43,7 @@ public class ScriptBuilderTests
             .AppendAllowScripts(true)
             .AppendCloud(true)
             .Build();
-        string expected = $"dotnet new {validProjectOptions.Template} -n {validProjectOptions.ProjectName} --allow-scripts yes --cloud";
+        string expected = $"dotnet new '{validProjectOptions.Template}' -n '{validProjectOptions.ProjectName}' --allow-scripts yes --cloud";
 
         Assert.That(script, Is.EqualTo(expected));
     }
@@ -56,7 +56,7 @@ public class ScriptBuilderTests
             .WithPlaceholders(validProjectOptions)
             .AppendAllowScripts(false)
             .Build();
-        string expected = $"dotnet new {validProjectOptions.Template} -n {validProjectOptions.ProjectName}";
+        string expected = $"dotnet new '{validProjectOptions.Template}' -n '{validProjectOptions.ProjectName}'";
 
         Assert.That(script, Is.EqualTo(expected));
     }
@@ -84,7 +84,7 @@ public class ScriptBuilderTests
             .WithPlaceholders(validUpdateOptions)
             .AppendVersion(version)
             .Build();
-        string expected = $"dotnet add package {validUpdateOptions.PackageName} --version {version}";
+        string expected = $"dotnet add package '{validUpdateOptions.PackageName}' --version {version}";
 
         Assert.That(script, Is.EqualTo(expected));
     }
@@ -94,8 +94,8 @@ public class ScriptBuilderTests
     public void DatabaseInstallScript_WithValidOptions_ReturnsValidScript()
     {
         string script = scriptBuilder.SetScript(ScriptType.DatabaseInstall).WithPlaceholders(validDatabaseOptions).Build();
-        string expected = $"dotnet kentico-xperience-dbmanager -- -s \"{validDatabaseOptions.ServerName}\" -d \"" +
-            $"{validDatabaseOptions.DatabaseName}\" -a \"{validDatabaseOptions.AdminPassword}\" --use-existing-database " +
+        string expected = $"dotnet kentico-xperience-dbmanager -- -s '{validDatabaseOptions.ServerName}' -d '" +
+            $"{validDatabaseOptions.DatabaseName}' -a '{validDatabaseOptions.AdminPassword}' --use-existing-database " +
             $"{validDatabaseOptions.UseExistingDatabase}";
 
         Assert.That(script, Is.EqualTo(expected));

@@ -57,9 +57,9 @@ public class CodeGenerateCommandTests : TestBase
         await command.PreExecute(profile, string.Empty);
         await command.Execute(profile, string.Empty);
 
-        string expectedCodeGenScript = $"dotnet run --project \"{PROJECT_NAME}.csproj\" --no-build -- --kxp-codegen " +
-            $"--skip-confirmation --type \"{TYPE}\" --location \"{WORKING_DIR}{LOCATION}\" --include \"{INCLUDE}\" " +
-            $"--exclude \"{EXCLUDE}\" --with-provider-class {WITH_PROVIDER} --namespace \"{NAMESPACE}\"";
+        string expectedCodeGenScript = $"dotnet run --project '{PROJECT_NAME}.csproj' --no-build -- --kxp-codegen " +
+            $"--skip-confirmation --type '{TYPE}' --location '{WORKING_DIR}{LOCATION}' --include '{INCLUDE}' " +
+            $"--exclude '{EXCLUDE}' --with-provider-class {WITH_PROVIDER} --namespace '{NAMESPACE}'";
 
         shellRunner.Received().Execute(Arg.Is<ShellOptions>(x => x.Script.Equals(expectedCodeGenScript)));
     }

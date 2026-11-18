@@ -1,4 +1,5 @@
 ﻿using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Helpers;
 using XperienceCommunity.Manager.Options;
 using XperienceCommunity.Manager.Services.Interfaces;
 
@@ -13,9 +14,9 @@ public class ScriptBuilder : IScriptBuilder
     private const string MKDIR_SCRIPT = "mkdir";
     private const string INSTALL_PROJECT_SCRIPT = $"dotnet new {nameof(InstallProjectOptions.Template)} -n " +
         $"{nameof(InstallProjectOptions.ProjectName)}";
-    private const string INSTALL_DATABASE_SCRIPT = "dotnet kentico-xperience-dbmanager -- -s \"" +
-        $"{nameof(InstallDatabaseOptions.ServerName)}\" -d \"{nameof(InstallDatabaseOptions.DatabaseName)}\" -a \"" +
-        $"{nameof(InstallDatabaseOptions.AdminPassword)}\" --use-existing-database {nameof(InstallDatabaseOptions.UseExistingDatabase)}";
+    private const string INSTALL_DATABASE_SCRIPT = $"dotnet kentico-xperience-dbmanager -- -s {nameof(InstallDatabaseOptions.ServerName)} " +
+        $"-d {nameof(InstallDatabaseOptions.DatabaseName)} -a {nameof(InstallDatabaseOptions.AdminPassword)} " +
+        $"--use-existing-database {nameof(InstallDatabaseOptions.UseExistingDatabase)}";
     private const string UNINSTALL_TEMPLATE_SCRIPT = $"dotnet new uninstall {Constants.TEMPLATES_PACKAGE}";
     private const string INSTALL_TEMPLATE_SCRIPT = $"dotnet new install {Constants.TEMPLATES_PACKAGE}";
     private const string UPDATE_PACKAGE_SCRIPT = $"dotnet add package {nameof(UpdateOptions.PackageName)}";
@@ -24,18 +25,18 @@ public class ScriptBuilder : IScriptBuilder
     private const string UNINSTALL_DBTOOL_SCRIPT = $"dotnet tool uninstall {Constants.DATABASE_TOOL} -g";
     private const string CI_STORE_SCRIPT = "dotnet run --no-build --kxp-ci-store";
     private const string CI_RESTORE_SCRIPT = "dotnet run --no-build --kxp-ci-restore";
-    private const string CD_NEW_CONFIG_SCRIPT = "dotnet run --no-build -- --kxp-cd-config --path \"" +
-        $"{nameof(ContinuousDeploymentConfig.ConfigPath)}\"";
-    private const string CD_STORE_SCRIPT = "dotnet run --no-build -- --kxp-cd-store --repository-path \"" +
-        $"{nameof(ContinuousDeploymentConfig.RepositoryPath)}\" --config-path \"{nameof(ContinuousDeploymentConfig.ConfigPath)}\"";
-    private const string CD_RESTORE_SCRIPT = "dotnet run -- --kxp-cd-restore --repository-path \"" +
-        $"{nameof(ContinuousDeploymentConfig.RepositoryPath)}\"";
+    private const string CD_NEW_CONFIG_SCRIPT = "dotnet run --no-build -- --kxp-cd-config --path " +
+        $"{nameof(ContinuousDeploymentConfig.ConfigPath)}";
+    private const string CD_STORE_SCRIPT = "dotnet run --no-build -- --kxp-cd-store --repository-path " +
+        $"{nameof(ContinuousDeploymentConfig.RepositoryPath)} --config-path {nameof(ContinuousDeploymentConfig.ConfigPath)}";
+    private const string CD_RESTORE_SCRIPT = "dotnet run -- --kxp-cd-restore --repository-path " +
+        $"{nameof(ContinuousDeploymentConfig.RepositoryPath)}";
     private const string MACRO_SCRIPT = "dotnet run --no-build -- --kxp-resign-macros";
     private const string CODEGEN_SCRIPT = "dotnet run --no-build -- --kxp-codegen --skip-confirmation " +
-        $"--type \"{nameof(CodeGenerateOptions.Type)}\" --location \"{nameof(CodeGenerateOptions.Location)}\" " +
-        $"--include \"{nameof(CodeGenerateOptions.Include)}\" --exclude \"{nameof(CodeGenerateOptions.Exclude)}\" " +
+        $"--type {nameof(CodeGenerateOptions.Type)} --location {nameof(CodeGenerateOptions.Location)} " +
+        $"--include {nameof(CodeGenerateOptions.Include)} --exclude {nameof(CodeGenerateOptions.Exclude)} " +
         $"--with-provider-class {nameof(CodeGenerateOptions.WithProviderClass)}";
-    private const string DELETE_FOLDER_SCRIPT = $"rm \"{nameof(ToolProfile.WorkingDirectory)}\" -r -Force";
+    private const string DELETE_FOLDER_SCRIPT = $"Remove-Item -LiteralPath {nameof(ToolProfile.WorkingDirectory)} -Recurse -Force";
 
 
     public IScriptBuilder AppendAllowScripts(bool allowScripts)
@@ -64,7 +65,7 @@ public class ScriptBuilder : IScriptBuilder
     {
         if (currentScriptType.Equals(ScriptType.CreateDirectory))
         {
-            currentScript += $" \"{path}\"";
+            currentScript += $" {Quote(path)}";
         }
 
         return this;
@@ -76,7 +77,7 @@ public class ScriptBuilder : IScriptBuilder
         if (currentScriptType.Equals(ScriptType.DatabaseInstall) &&
             !string.IsNullOrEmpty(databaseUserName) && !string.IsNullOrEmpty(databasePassword))
         {
-            currentScript += $" -u \"{databaseUserName}\" -p \"{databasePassword}\"";
+            currentScript += $" -u {Quote(databaseUserName)} -p {Quote(databasePassword)}";
         }
 
         return this;
@@ -87,7 +88,7 @@ public class ScriptBuilder : IScriptBuilder
     {
         if (currentScriptType.Equals(ScriptType.GenerateCode) && !string.IsNullOrEmpty(nameSpace))
         {
-            currentScript += $" --namespace \"{nameSpace}\"";
+            currentScript += $" --namespace {Quote(nameSpace)}";
         }
 
         return this;
@@ -103,12 +104,12 @@ public class ScriptBuilder : IScriptBuilder
 
         if (!string.IsNullOrEmpty(oldSalt))
         {
-            currentScript += $" --old-salt \"{oldSalt}\"";
+            currentScript += $" --old-salt {Quote(oldSalt)}";
         }
 
         if (!string.IsNullOrEmpty(newSalt))
         {
-            currentScript += $" --new-salt \"{newSalt}\"";
+            currentScript += $" --new-salt {Quote(newSalt)}";
         }
 
         return this;
@@ -122,7 +123,7 @@ public class ScriptBuilder : IScriptBuilder
             return this;
         }
 
-        currentScript += $" --sign-all --username \"{userName}\"";
+        currentScript += $" --sign-all --username {Quote(userName)}";
 
         return this;
     }
@@ -164,11 +165,11 @@ public class ScriptBuilder : IScriptBuilder
         int runIndex = currentScript.IndexOf("dotnet run");
         if (runIndex != -1 && !string.IsNullOrEmpty(projectName))
         {
-            currentScript = currentScript.Insert(runIndex + 10, $" --project \"{projectName}.csproj\"");
+            currentScript = currentScript.Insert(runIndex + 10, $" --project {Quote($"{projectName}.csproj")}");
         }
         else if (currentScript.StartsWith("dotnet add") && !string.IsNullOrEmpty(projectName))
         {
-            currentScript += $" --project \"{projectName}.csproj\"";
+            currentScript += $" --project {Quote($"{projectName}.csproj")}";
         }
 
         return this;
@@ -182,17 +183,36 @@ public class ScriptBuilder : IScriptBuilder
             return this;
         }
 
-        // Replace all placeholders in script with object values if non-null or empty
+        // Replace all placeholders in script with quoted object values if non-null or empty
         foreach (var prop in dataObject.GetType().GetProperties())
         {
-            string value = prop.GetValue(dataObject)?.ToString() ?? string.Empty;
-            if (!string.IsNullOrEmpty(value))
+            object? rawValue = prop.GetValue(dataObject);
+            string value = rawValue?.ToString() ?? string.Empty;
+            if (string.IsNullOrEmpty(value))
             {
-                currentScript = currentScript.Replace(prop.Name, value);
+                continue;
             }
+
+            // Booleans can't contain special characters and are passed as bare switch values
+            string quotedValue = rawValue is bool ? value : Quote(value);
+            currentScript = currentScript.Replace(prop.Name, quotedValue);
         }
 
         return this;
+    }
+
+
+    /// <summary>
+    /// Quotes a value for the current script. <see cref="ScriptType.DeleteDirectory"/> and <see cref="ScriptType.CreateDirectory"/>
+    /// run PowerShell cmdlets, while all other scripts pass the value to a native executable.
+    /// </summary>
+    private string Quote(string? value)
+    {
+        value ??= string.Empty;
+
+        return currentScriptType is ScriptType.DeleteDirectory or ScriptType.CreateDirectory
+            ? PowerShellQuoteHelper.QuoteLiteral(value)
+            : PowerShellQuoteHelper.QuoteNativeArgument(value);
     }
 
 

@@ -45,8 +45,8 @@ public class MacroCommandTests : TestBase
         await command.PreExecute(profile, string.Empty);
         await command.Execute(profile, string.Empty);
 
-        string expectedMacroScript = $"dotnet run --project \"{PROJECT}.csproj\" --no-build -- --kxp-resign-macros --sign-all " +
-            $"--username \"{USER}\" --new-salt \"{NEW_SALT}\"";
+        string expectedMacroScript = $"dotnet run --project '{PROJECT}.csproj' --no-build -- --kxp-resign-macros --sign-all " +
+            $"--username '{USER}' --new-salt '{NEW_SALT}'";
 
         shellRunner.Received().Execute(Arg.Is<ShellOptions>(x => x.Script.Equals(expectedMacroScript)));
     }
@@ -64,8 +64,8 @@ public class MacroCommandTests : TestBase
         await command.PreExecute(profile, string.Empty);
         await command.Execute(profile, string.Empty);
 
-        string expectedMacroScript = $"dotnet run --project \"{PROJECT}.csproj\" --no-build -- --kxp-resign-macros " +
-            $"--old-salt \"{OLD_SALT}\" --new-salt \"{NEW_SALT}\"";
+        string expectedMacroScript = $"dotnet run --project '{PROJECT}.csproj' --no-build -- --kxp-resign-macros " +
+            $"--old-salt '{OLD_SALT}' --new-salt '{NEW_SALT}'";
 
         shellRunner.Received().Execute(Arg.Is<ShellOptions>(x => x.Script.Equals(expectedMacroScript)));
     }

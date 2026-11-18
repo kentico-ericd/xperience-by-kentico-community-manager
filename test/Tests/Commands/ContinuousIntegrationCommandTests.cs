@@ -34,7 +34,7 @@ public class ContinuousIntegrationCommandTests : TestBase
         await command.PreExecute(profile, "store");
         await command.Execute(profile, "store");
 
-        string expectedScript = $"dotnet run --project \"{PROJECT}.csproj\" --no-build --kxp-ci-store";
+        string expectedScript = $"dotnet run --project '{PROJECT}.csproj' --no-build --kxp-ci-store";
 
         shellRunner.Received().Execute(Arg.Is<ShellOptions>(x => x.Script.Equals(expectedScript)));
     }
@@ -47,7 +47,7 @@ public class ContinuousIntegrationCommandTests : TestBase
         await command.PreExecute(profile, "restore");
         await command.Execute(profile, "restore");
 
-        string expectedScript = $"dotnet run --project \"{PROJECT}.csproj\" --no-build --kxp-ci-restore";
+        string expectedScript = $"dotnet run --project '{PROJECT}.csproj' --no-build --kxp-ci-restore";
 
         shellRunner.Received().Execute(Arg.Is<ShellOptions>(x => x.Script.Equals(expectedScript)));
     }
