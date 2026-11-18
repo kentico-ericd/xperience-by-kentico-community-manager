@@ -4,6 +4,7 @@ public static class AssetHelper
 {
     private const string ASSET_DIRNAME = "assets";
     private const string MEDIA_DIRNAME = "media";
+    private const string BIZFORM_DIRNAME = "BizFormFiles";
     private const string CONTENT_ITEM_DIRNAME = "contentitems";
 
 
@@ -24,6 +25,7 @@ public static class AssetHelper
         var result = new List<AssetStatistic>();
         AddStatistic(result, assetDir, MEDIA_DIRNAME);
         AddStatistic(result, assetDir, CONTENT_ITEM_DIRNAME);
+        AddStatistic(result, assetDir, BIZFORM_DIRNAME);
 
         return result;
     }

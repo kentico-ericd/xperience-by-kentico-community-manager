@@ -75,4 +75,13 @@ public class ReportRendererTests
 
         await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "GetChannelStatistics.sql");
     }
+
+
+    [Test]
+    public async Task RenderUnusedContentItemsReport_RunsQuery()
+    {
+        await reportRenderer.RenderUnusedContentItemsReport(CONNSTRING);
+
+        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "GetUnusedContentItems.sql");
+    }
 }

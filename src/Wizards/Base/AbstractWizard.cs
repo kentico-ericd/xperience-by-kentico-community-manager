@@ -21,7 +21,7 @@ public abstract class AbstractWizard<TOptions> : IWizard<TOptions> where TOption
     public async Task<TOptions> Run(params string[] args)
     {
         await InitSteps(args);
-        if (Steps.Any())
+        if (Steps.Count != 0)
         {
             do
             {

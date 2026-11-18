@@ -61,7 +61,7 @@ public class SqlExecutor(IConnectionFactory connectionFactory) : ISqlExecutor
         using var connection = connectionFactory.GetConnection(connectionString);
         var command = connection.CreateCommand();
         command.CommandText = query;
-        if (parameters is not null && parameters.Any())
+        if (parameters is not null && parameters.Count != 0)
         {
             foreach (var param in parameters)
             {

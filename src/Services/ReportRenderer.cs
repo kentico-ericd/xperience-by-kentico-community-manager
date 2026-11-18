@@ -146,6 +146,29 @@ public class ReportRenderer : IReportRenderer
     }
 
 
+    public async Task RenderUnusedContentItemsReport(string connectionString)
+    {
+        try
+        {
+            string header = "Unused content items";
+            var unusedContentItems = await sqlExecutor.ExecuteQuery(connectionString, "GetUnusedContentItems.sql");
+            if (!unusedContentItems.Any())
+            {
+                RenderSection(header, new Markup($"[{Constants.SUCCESS_COLOR}]No unused content items![/]"));
+            }
+            else
+            {
+                var table = GetTable(unusedContentItems);
+                RenderSection(header, new Text($"Total count: {unusedContentItems.Count()}"), table);
+            }
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+    }
+
+
     private Table GetTable(IEnumerable<JObject> objects)
     {
         var table = new Table() { Border = BorderStyle };

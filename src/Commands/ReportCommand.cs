@@ -93,6 +93,9 @@ public class ReportCommand : AbstractCommand
         ctx.Status = "Getting Workspace statistics...";
         await reportRenderer.RenderWorkspaceReport(connectionString);
 
+        ctx.Status = "Getting unused content items...";
+        await reportRenderer.RenderUnusedContentItemsReport(connectionString);
+
         ctx.Status = "Getting admin users...";
         await reportRenderer.RenderAdminUserReport(connectionString);
 
