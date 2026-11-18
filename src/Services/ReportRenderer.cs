@@ -143,7 +143,7 @@ public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
     {
         try
         {
-            string header = "Unused content items";
+            string header = "Unused content items (top 50)";
             var unusedContentItems = await sqlExecutor.ExecuteQuery(connectionString, "GetUnusedContentItems.sql");
             if (!unusedContentItems.Any())
             {
@@ -152,7 +152,7 @@ public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
             else
             {
                 var table = GetTable(unusedContentItems);
-                RenderSection(header, new Text($"Total count: {unusedContentItems.Count()}"), table);
+                RenderSection(header, table);
             }
         }
         catch (Exception ex)
