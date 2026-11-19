@@ -41,13 +41,13 @@ public class ReportWizard : AbstractWizard<ReportOptions>
             },
             ValueReceiver = (v) => Options.DoExport = v
         }));
-        Steps.Add(new Step<bool>(new()
+        Steps.Add(new Step<string>(new()
         {
-            Prompt = new ConfirmationPrompt("Export the report as plain text (Y) or HTML (N)?")
-            {
-                DefaultValue = false
-            },
-            ValueReceiver = (v) => Options.ExportAsText = v
+            Prompt = new SelectionPrompt<string>()
+                .Title($"What export [{Constants.PROMPT_COLOR}]type[/]?")
+                .AddChoices("HTML", "Text"),
+            ValueReceiver = (v) => Options.ExportAsText = v.Equals("Text"),
+            SkipChecker = () => !Options.DoExport
         }));
 
         return Task.CompletedTask;
