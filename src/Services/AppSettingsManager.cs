@@ -44,14 +44,22 @@ public class AppSettingsManager : IAppSettingsManager
         string? fileName = null)
     {
         var appSettings = await LoadSettings(profile, fileName);
-        var populatedKeys = keys
-            .Where(key => appSettings.Properties().Select(p => p.Name).Contains(key.KeyName, StringComparer.OrdinalIgnoreCase))
-            .Select(key => { key.ActualValue = appSettings.GetValue(key.KeyName)?.Value<object>(); return key; });
-        var allKeys = new List<ConfigurationKey>(populatedKeys);
+        var keysInFile = new List<ConfigurationKey>();
+        var keysNotInFile = new List<ConfigurationKey>();
+        foreach (var key in keys)
+        {
+            var setting = appSettings.GetValue(key.KeyName, StringComparison.OrdinalIgnoreCase);
+            if (setting is null)
+            {
+                keysNotInFile.Add(key);
+                continue;
+            }
 
-        allKeys.AddRange(keys.Where(key => !populatedKeys.Select(k => k.KeyName).Contains(key.KeyName)));
+            key.ActualValue = setting.Value<object>();
+            keysInFile.Add(key);
+        }
 
-        return allKeys;
+        return [.. keysInFile, .. keysNotInFile];
     }
 
 

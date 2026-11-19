@@ -75,7 +75,7 @@ public abstract class AbstractCommand : ICommand
         StopProcessing = true;
         if (process is not null && !process.HasExited)
         {
-            process.Kill();
+            process.Kill(entireProcessTree: true);
         }
     }
 

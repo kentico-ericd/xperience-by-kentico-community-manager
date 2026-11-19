@@ -123,13 +123,11 @@ public class ConfigManager : IConfigManager
         string text = await File.ReadAllTextAsync(Constants.CONFIG_FILENAME);
         var json = JsonConvert.DeserializeObject<JObject>(text) ??
             throw new InvalidOperationException("Unable to read configuration file for migration.");
-        if (toolVersion.Major >= 5 && toolVersion.Minor >= 0 && toolVersion.Build >= 0
-            && config.Version?.Major < 5)
+        if (toolVersion >= new Version(5, 0) && config.Version < new Version(5, 0))
         {
             MigrateTo500(json, config);
         }
-        if (toolVersion.Major >= 5 && toolVersion.Minor >= 3 && toolVersion.Build >= 0
-            && config.Version?.Major <= 5 && config.Version?.Minor < 3)
+        if (toolVersion >= new Version(5, 3) && config.Version < new Version(5, 3))
         {
             MigrateTo530(config);
         }

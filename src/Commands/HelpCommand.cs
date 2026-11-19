@@ -72,10 +72,17 @@ public class HelpCommand : AbstractCommand
         AnsiConsole.WriteLine();
         if (v is not null)
         {
-            var latestVersion = await NuGetVersionHelper.GetLatestVersion("XperienceCommunity.Manager", v);
-            if (latestVersion is not null)
+            try
             {
-                AnsiConsole.MarkupInterpolated($" New version [{Constants.SUCCESS_COLOR}]{latestVersion}[/] available!\n\n");
+                var latestVersion = await NuGetVersionHelper.GetLatestVersion("XperienceCommunity.Manager", v);
+                if (latestVersion is not null)
+                {
+                    AnsiConsole.MarkupInterpolated($" New version [{Constants.SUCCESS_COLOR}]{latestVersion}[/] available!\n\n");
+                }
+            }
+            catch
+            {
+                // Don't print exceptions in Help menu when failing update check
             }
         }
     }
