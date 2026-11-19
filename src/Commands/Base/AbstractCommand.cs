@@ -58,11 +58,21 @@ public abstract class AbstractCommand : ICommand
     /// </summary>
     protected void ErrorDataReceived(object sender, DataReceivedEventArgs e)
     {
-        if (!string.IsNullOrEmpty(e.Data))
+        if (!string.IsNullOrEmpty(e.Data) && !IsInformationalMessage(e.Data))
         {
             LogError(e.Data, sender as Process);
         }
     }
+
+
+    /// <summary>
+    /// Returns <c>true</c> if a line written to the error stream is only informational and isn't an error.
+    /// </summary>
+    /// <remarks>
+    /// Newer .NET SDKs write "Using launch settings from..." to the error stream when running <c>dotnet run</c>.
+    /// </remarks>
+    public static bool IsInformationalMessage(string message) =>
+        message.StartsWith("Using launch settings from ", StringComparison.Ordinal);
 
 
     /// <summary>

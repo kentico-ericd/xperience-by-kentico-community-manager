@@ -11,6 +11,21 @@ public static class NuGetVersionHelper
 
 
     /// <summary>
+    /// Formats a version the way NuGet packages are versioned, e.g. "31.10.4" rather than "31.10.4.0". The fourth
+    /// number is only included if it's set.
+    /// </summary>
+    public static string ToPackageVersion(Version version)
+    {
+        if (version.Revision > 0)
+        {
+            return version.ToString();
+        }
+
+        return version.Build >= 0 ? version.ToString(3) : version.ToString(2);
+    }
+
+
+    /// <summary>
     /// Gets all versions of the provided NuGet package.
     /// </summary>
     public static async Task<IEnumerable<NuGetVersion>> GetPackageVersions(string package)

@@ -134,6 +134,15 @@ public class UpdateCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilde
 
     private async Task UpdatePackages(UpdateOptions options, ToolProfile? profile, IEnumerable<string> packagesToUpdate)
     {
+        if (options.Version is null || string.IsNullOrEmpty(profile?.WorkingDirectory))
+        {
+            LogError("Couldn't load the version or the profile's working directory.");
+
+            return;
+        }
+
+        string version = NuGetVersionHelper.ToPackageVersion(options.Version);
+        string? centralPackagesFile = ProjectFileHelper.FindCentralPackagesFile(profile.WorkingDirectory);
         foreach (string package in packagesToUpdate)
         {
             if (StopProcessing)
@@ -141,7 +150,13 @@ public class UpdateCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilde
                 return;
             }
 
-            AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Updating {package} to version {options.Version}...[/]");
+            AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Updating {package} to version {version}...[/]");
+
+            // Edit central package versions directly, as "dotnet add package" adds a duplicate if the casing differs
+            if (centralPackagesFile is not null && ProjectFileHelper.SetCentralPackageVersion(centralPackagesFile, package, version))
+            {
+                continue;
+            }
 
             options.PackageName = package;
             string packageScript = scriptBuilder.SetScript(ScriptType.PackageUpdate)

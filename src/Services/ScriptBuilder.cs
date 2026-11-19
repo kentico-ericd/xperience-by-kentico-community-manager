@@ -171,13 +171,14 @@ public class ScriptBuilder : IScriptBuilder
             return this;
         }
 
+        string packageVersion = NuGetVersionHelper.ToPackageVersion(version);
         if (currentScriptType.Equals(ScriptType.TemplateInstall))
         {
-            currentScript += $"::{version}";
+            currentScript += $"::{packageVersion}";
         }
         else if (currentScriptType.Equals(ScriptType.PackageUpdate) || currentScriptType.Equals(ScriptType.InstallDatabaseTool))
         {
-            currentScript += $" --version {version}";
+            currentScript += $" --version {packageVersion}";
         }
 
         return this;

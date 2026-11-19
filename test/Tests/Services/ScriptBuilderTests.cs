@@ -91,6 +91,21 @@ public class ScriptBuilderTests
 
 
     [Test]
+    public void PackageUpdate_AppendVersion_FourPartVersion_UsesPackageVersionFormat()
+    {
+        // NuGetVersion.Version always has four parts
+        var version = new Version(31, 10, 4, 0);
+        string script = scriptBuilder.SetScript(ScriptType.PackageUpdate)
+            .WithPlaceholders(validUpdateOptions)
+            .AppendVersion(version)
+            .Build();
+        string expected = $"dotnet add package '{validUpdateOptions.PackageName}' --version 31.10.4";
+
+        Assert.That(script, Is.EqualTo(expected));
+    }
+
+
+    [Test]
     public void DatabaseInstallScript_WithValidOptions_ReturnsValidScript()
     {
         string script = scriptBuilder.SetScript(ScriptType.DatabaseInstall).WithPlaceholders(validDatabaseOptions).Build();
