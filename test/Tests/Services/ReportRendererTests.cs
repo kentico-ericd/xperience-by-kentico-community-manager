@@ -55,7 +55,7 @@ public class ReportRendererTests
     {
         await reportRenderer.RenderTableSizeReport(CONNSTRING);
 
-        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "GetLargestTables.sql");
+        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "LargestTables.sql");
     }
 
 
@@ -64,7 +64,7 @@ public class ReportRendererTests
     {
         await reportRenderer.RenderWorkspaceReport(CONNSTRING);
 
-        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "GetWorkspaceStatistics.sql");
+        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "WorkspaceStatistics.sql");
     }
 
 
@@ -73,7 +73,7 @@ public class ReportRendererTests
     {
         await reportRenderer.RenderChannelStatisticsReport(CONNSTRING);
 
-        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "GetChannelStatistics.sql");
+        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "ChannelStatistics.sql");
     }
 
 
@@ -82,6 +82,17 @@ public class ReportRendererTests
     {
         await reportRenderer.RenderUnusedContentItemsReport(CONNSTRING);
 
-        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "GetUnusedContentItems.sql");
+        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "UnusedContentItems.sql");
+    }
+
+
+    [Test]
+    public async Task RenderScheduledTaskReport_RunsQuery()
+    {
+        await reportRenderer.RenderScheduledTaskReport(CONNSTRING);
+
+        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "RunningTasks.sql");
+        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "EnabledTasksNeverExecuted.sql");
+        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "NonRecurringScheduledTasksNotExecuted.sql");
     }
 }

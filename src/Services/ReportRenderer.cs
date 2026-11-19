@@ -47,7 +47,7 @@ public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
             else
             {
                 var tablesToRender = classResults.Where(t => t.Any()).Select(GetTable);
-                RenderSection(header, tablesToRender.ToArray());
+                RenderSection(header, [.. tablesToRender]);
             }
         }
         catch (Exception ex)
@@ -76,7 +76,7 @@ public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
     {
         try
         {
-            var largestTables = await sqlExecutor.ExecuteQuery(connectionString, "GetLargestTables.sql");
+            var largestTables = await sqlExecutor.ExecuteQuery(connectionString, "LargestTables.sql");
             var table = GetTable(largestTables);
             RenderSection("Largest tables", table);
         }
@@ -91,7 +91,7 @@ public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
     {
         try
         {
-            var workspaceStatistics = await sqlExecutor.ExecuteQuery(connectionString, "GetWorkspaceStatistics.sql");
+            var workspaceStatistics = await sqlExecutor.ExecuteQuery(connectionString, "WorkspaceStatistics.sql");
             var workspaceBarItems = workspaceStatistics.Select(GetWorkspaceStatisticsBarItem);
             RenderSection("Workspace stats (content item count)", new BarChart() { Width = BAR_CHART_WIDTH }
                 .AddItems(workspaceBarItems));
@@ -107,7 +107,7 @@ public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
     {
         try
         {
-            var channelStatistics = await sqlExecutor.ExecuteQuery(connectionString, "GetChannelStatistics.sql");
+            var channelStatistics = await sqlExecutor.ExecuteQuery(connectionString, "ChannelStatistics.sql");
             var channelBarItems = channelStatistics.Select(GetChannelStatisticsBarItem);
             RenderSection("Channel stats (pages, headless items, emails)", new BarChart() { Width = BAR_CHART_WIDTH }
                 .AddItems(channelBarItems));
@@ -144,7 +144,7 @@ public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
         try
         {
             string header = "Unused content items (top 50)";
-            var unusedContentItems = await sqlExecutor.ExecuteQuery(connectionString, "GetUnusedContentItems.sql");
+            var unusedContentItems = await sqlExecutor.ExecuteQuery(connectionString, "UnusedContentItems.sql");
             if (!unusedContentItems.Any())
             {
                 RenderSection(header, new Markup($"[{Constants.SUCCESS_COLOR}]No unused content items![/]"));
@@ -153,6 +153,34 @@ public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
             {
                 var table = GetTable(unusedContentItems);
                 RenderSection(header, table);
+            }
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+    }
+
+
+    public async Task RenderScheduledTaskReport(string connectionString)
+    {
+        try
+        {
+            var taskResults = new IEnumerable<JObject>[]
+            {
+                await sqlExecutor.ExecuteQuery(connectionString, "RunningTasks.sql"),
+                await sqlExecutor.ExecuteQuery(connectionString, "EnabledTasksNeverExecuted.sql"),
+                await sqlExecutor.ExecuteQuery(connectionString, "NonRecurringScheduledTasksNotExecuted.sql"),
+            };
+            string header = "Scheduled tasks";
+            if (taskResults.All(t => !t.Any()))
+            {
+                RenderSection(header, new Markup($"[{Constants.SUCCESS_COLOR}]No scheduled task issues detected![/]"));
+            }
+            else
+            {
+                var tablesToRender = taskResults.Where(t => t.Any()).Select(GetTable);
+                RenderSection(header, [.. tablesToRender]);
             }
         }
         catch (Exception ex)

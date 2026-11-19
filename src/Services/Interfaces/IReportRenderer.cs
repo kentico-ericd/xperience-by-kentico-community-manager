@@ -51,4 +51,10 @@ public interface IReportRenderer : IService
     /// Displays a table of content items with no references.
     /// </summary>
     public Task RenderUnusedContentItemsReport(string connectionString);
+
+
+    /// <summary>
+    /// Displays tables showing scheduled task execution statistics.
+    /// </summary>
+    public Task RenderScheduledTaskReport(string connectionString);
 }

@@ -88,5 +88,8 @@ public class ReportCommand(IReportRenderer reportRenderer, IAppSettingsManager a
 
         ctx.Status = "Getting Event log errors...";
         await reportRenderer.RenderEventLogReport(connectionString);
+
+        ctx.Status = "Checking scheduled tasks...";
+        await reportRenderer.RenderScheduledTaskReport(connectionString);
     }
 }
