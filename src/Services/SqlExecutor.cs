@@ -78,7 +78,7 @@ public class SqlExecutor(IConnectionFactory connectionFactory) : ISqlExecutor
     }
 
 
-    private static Task<string> GetSqlQueryText(string queryName)
+    private static async Task<string> GetSqlQueryText(string queryName)
     {
         var assembly = Assembly.GetExecutingAssembly();
         string? resourceName = assembly.GetManifestResourceNames().FirstOrDefault(str => str.EndsWith(queryName));
@@ -91,6 +91,6 @@ public class SqlExecutor(IConnectionFactory connectionFactory) : ISqlExecutor
             throw new InvalidOperationException($"Failed to open stream to '{resourceName}'");
         using var reader = new StreamReader(stream);
 
-        return reader.ReadToEndAsync();
+        return await reader.ReadToEndAsync();
     }
 }

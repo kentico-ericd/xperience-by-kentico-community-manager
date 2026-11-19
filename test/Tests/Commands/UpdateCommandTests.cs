@@ -58,8 +58,10 @@ public class UpdateCommandTests : TestBase
         [
             "kentico.xperience.azurestorage",
             "kentico.xperience.cloud",
-            "kentico.xperience.graphql",
-            "kentico.xperience.mjml"
+            "kentico.xperience.mjml",
+            "kentico.xperience.amazonstorage",
+            "kentico.xperience.sendgrid",
+            "kentico.xperience.managementapi"
         ];
 
         Assert.That(command.Errors, Is.Empty);

@@ -93,7 +93,7 @@ Installing a new project automatically includes a database as well. If you want 
 
 ### Updating a project version
 
-This command updates the NuGet packages and database of the current profile.
+This command updates versions of any referenced Xperience by Kentico packages in the current profile. The .csproj file is expected to be located in the [WorkingDirectory](#managing-profiles) of the current profile.
 
 ```bash
 xman update
