@@ -10,9 +10,29 @@ namespace XperienceCommunity.Manager.Services;
 
 public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
 {
+    private Recorder? recorder;
     private const int BAR_CHART_WIDTH = 100;
     private const int MAX_COLUMN_CHARS = 200;
+    private const string REPORT_DIRECTORY = "XperienceReports";
     private static TableBorder BorderStyle => TableBorder.Minimal;
+
+
+    private Recorder Recorder => recorder ??= new Recorder(AnsiConsole.Create(new AnsiConsoleSettings()));
+
+
+    public Task Export(bool exportAsText, string workingDirectory)
+    {
+        string targetDirectory = Path.Combine(workingDirectory, REPORT_DIRECTORY);
+        if (!Directory.Exists(targetDirectory))
+        {
+            Directory.CreateDirectory(targetDirectory);
+        }
+
+        string data = exportAsText ? Recorder.ExportText() : Recorder.ExportHtml();
+        Recorder.Dispose();
+
+        return File.WriteAllTextAsync($"{Path.Combine(targetDirectory, $"{DateTime.Now:yyyyMMddHHmmss}.{(exportAsText ? "txt" : "html")}")}", data);
+    }
 
 
     public async Task RenderAdminUserReport(string connectionString)
@@ -278,16 +298,16 @@ public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
     }
 
 
-    private static void HandleException(Exception ex)
+    private void HandleException(Exception ex)
     {
-        AnsiConsole.WriteException(ex);
-        AnsiConsole.WriteLine();
+        Recorder.WriteException(ex);
+        Recorder.WriteLine();
     }
 
 
-    private static void RenderSection(string header, params IRenderable[] renderables)
+    private void RenderSection(string header, params IRenderable[] renderables)
     {
-        AnsiConsole.Write(new Rule(header)
+        Recorder.Write(new Rule(header)
         {
             Justification = Justify.Left,
             Style = Style.Parse(Constants.EMPHASIS_COLOR)
@@ -295,7 +315,7 @@ public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
         foreach (var renderable in renderables)
         {
             var padder = new Padder(renderable, new Padding(5, 1, 0, 1));
-            AnsiConsole.Write(padder);
+            Recorder.Write(padder);
         }
     }
 }

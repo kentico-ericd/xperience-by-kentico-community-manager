@@ -1,4 +1,5 @@
-﻿using NSubstitute;
+﻿using Newtonsoft.Json.Linq;
+using NSubstitute;
 
 using NUnit.Framework;
 
@@ -94,5 +95,36 @@ public class ReportRendererTests
         await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "RunningTasks.sql");
         await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "EnabledTasksNeverExecuted.sql");
         await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "NonRecurringScheduledTasksNotExecuted.sql");
+    }
+
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task Export_ExportsData(bool exportAsText)
+    {
+        string workingDirectory = "ExportDir";
+        int testUserId = 123;
+        string testUserName = "TestUser";
+
+        var mockSqlExecutor = Substitute.For<ISqlExecutor>();
+        mockSqlExecutor.ExecuteQuery(Arg.Any<string>(), "EnabledUsersWithAdminAccess.sql").Returns(
+        [
+            new JObject(new JProperty("UserID", JToken.FromObject(testUserId)), new JProperty("UserName", JToken.FromObject(testUserName)))
+        ]);
+        var renderer = new ReportRenderer(mockSqlExecutor);
+
+        await renderer.RenderAdminUserReport("FAKE_CONNSTRING");
+        await renderer.Export(exportAsText, workingDirectory);
+        string[] files = Directory.GetFiles(Path.Combine(workingDirectory, "XperienceReports"), $"*{(exportAsText ? ".txt" : ".html")}");
+        string fileContent = await File.ReadAllTextAsync(files[0]);
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(files, Has.Length.EqualTo(1));
+            Assert.That(fileContent, Does.Contain(testUserId.ToString()));
+            Assert.That(fileContent, Does.Contain(testUserName));
+        }
+
+        Directory.Delete(workingDirectory, true);
     }
 }

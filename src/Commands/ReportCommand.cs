@@ -1,6 +1,4 @@
-﻿using Spectre.Console;
-
-using XperienceCommunity.Manager.Commands.Base;
+﻿using XperienceCommunity.Manager.Commands.Base;
 using XperienceCommunity.Manager.Configuration;
 using XperienceCommunity.Manager.Options;
 using XperienceCommunity.Manager.Services.Interfaces;
@@ -58,38 +56,25 @@ public class ReportCommand(IReportRenderer reportRenderer, IAppSettingsManager a
 
         var options = await wizard.Run(workingDirectory);
 
-        await AnsiConsole.Status().StartAsync("Running reports...", (ctx) =>
-            RunReportInternal(ctx, connectionString, workingDirectory, options));
+        await RunReportInternal(connectionString, workingDirectory, options);
     }
 
 
-    private async Task RunReportInternal(StatusContext ctx, string connectionString, string workingDirectory, ReportOptions options)
+    private async Task RunReportInternal(string connectionString, string workingDirectory, ReportOptions options)
     {
-        ctx.Status = "Checking class consistency...";
         await reportRenderer.RenderClassConsistencyReport(connectionString);
-
-        ctx.Status = "Checking assets...";
         await reportRenderer.RenderAssetsReport(workingDirectory, options.CustomAssetDirectoryName);
-
-        ctx.Status = "Getting channel statistics...";
         await reportRenderer.RenderChannelStatisticsReport(connectionString);
-
-        ctx.Status = "Getting Workspace statistics...";
         await reportRenderer.RenderWorkspaceReport(connectionString);
-
-        ctx.Status = "Getting unused content items...";
         await reportRenderer.RenderUnusedContentItemsReport(connectionString);
-
-        ctx.Status = "Getting admin users...";
         await reportRenderer.RenderAdminUserReport(connectionString);
-
-        ctx.Status = "Getting large tables...";
         await reportRenderer.RenderTableSizeReport(connectionString);
-
-        ctx.Status = "Getting Event log errors...";
         await reportRenderer.RenderEventLogReport(connectionString);
-
-        ctx.Status = "Checking scheduled tasks...";
         await reportRenderer.RenderScheduledTaskReport(connectionString);
+
+        if (options.DoExport)
+        {
+            await reportRenderer.Export(options.ExportAsText, workingDirectory);
+        }
     }
 }

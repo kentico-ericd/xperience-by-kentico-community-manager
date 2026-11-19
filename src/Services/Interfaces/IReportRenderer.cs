@@ -6,6 +6,14 @@
 public interface IReportRenderer : IService
 {
     /// <summary>
+    /// Exports the recorded report output to a file ends recording.
+    /// </summary>
+    /// <param name="exportAsText">If true, exports the report as a text file; otherwise, exports as an HTML file.</param>
+    /// <param name="workingDirectory">The directory where the report will be exported.</param>
+    public Task Export(bool exportAsText, string workingDirectory);
+
+
+    /// <summary>
     /// Displays the enabled administration users table.
     /// </summary>
     public Task RenderAdminUserReport(string connectionString);
