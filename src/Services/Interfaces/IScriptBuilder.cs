@@ -91,8 +91,8 @@ public interface IScriptBuilder : IService
 
 
     /// <summary>
-    /// Replaces script placeholders with the values of the object properties. If a property is <c>null</c> or emtpy,
-    /// the placeholder remains in the script.
+    /// Replaces script placeholders (property names in braces, e.g. <c>{ProjectName}</c>) with the quoted values of the
+    /// object properties. If a property is <c>null</c> or empty, the placeholder remains in the script.
     /// </summary>
     public IScriptBuilder WithPlaceholders(object? dataObject);
 }

@@ -1,4 +1,6 @@
-﻿using XperienceCommunity.Manager.Configuration;
+﻿using System.Text.RegularExpressions;
+
+using XperienceCommunity.Manager.Configuration;
 using XperienceCommunity.Manager.Helpers;
 using XperienceCommunity.Manager.Options;
 using XperienceCommunity.Manager.Services.Interfaces;
@@ -7,36 +9,69 @@ namespace XperienceCommunity.Manager.Services;
 
 public class ScriptBuilder : IScriptBuilder
 {
+    // Matches placeholders like "{Exclude}" and captures the property name
+    private static readonly Regex placeholderRegex = new(@"\{(?<propertyName>\w+)\}", RegexOptions.Compiled);
+
     private ScriptType currentScriptType;
     private string currentScript = string.Empty;
 
+    // Project
     private const string BUILD_SCRIPT = "dotnet build";
-    private const string MKDIR_SCRIPT = "mkdir";
-    private const string INSTALL_PROJECT_SCRIPT = $"dotnet new {nameof(InstallProjectOptions.Template)} -n " +
-        $"{nameof(InstallProjectOptions.ProjectName)}";
-    private const string INSTALL_DATABASE_SCRIPT = $"dotnet kentico-xperience-dbmanager -- -s {nameof(InstallDatabaseOptions.ServerName)} " +
-        $"-d {nameof(InstallDatabaseOptions.DatabaseName)} -a {nameof(InstallDatabaseOptions.AdminPassword)} " +
-        $"--use-existing-database {nameof(InstallDatabaseOptions.UseExistingDatabase)}";
-    private const string UNINSTALL_TEMPLATE_SCRIPT = $"dotnet new uninstall {Constants.TEMPLATES_PACKAGE}";
+    private const string UPDATE_PACKAGE_SCRIPT = $"dotnet add package {{{nameof(UpdateOptions.PackageName)}}}";
+
+    private const string INSTALL_PROJECT_SCRIPT =
+        $"dotnet new {{{nameof(InstallProjectOptions.Template)}}}" +
+        $" -n {{{nameof(InstallProjectOptions.ProjectName)}}}";
+
+    // Templates
     private const string INSTALL_TEMPLATE_SCRIPT = $"dotnet new install {Constants.TEMPLATES_PACKAGE}";
-    private const string UPDATE_PACKAGE_SCRIPT = $"dotnet add package {nameof(UpdateOptions.PackageName)}";
+    private const string UNINSTALL_TEMPLATE_SCRIPT = $"dotnet new uninstall {Constants.TEMPLATES_PACKAGE}";
+
+    // Database and database tool
     private const string UPDATE_DATABASE_SCRIPT = "dotnet run --no-build --kxp-update -- --skip-confirmation";
     private const string INSTALL_DBTOOL_SCRIPT = $"dotnet tool install {Constants.DATABASE_TOOL} -g";
     private const string UNINSTALL_DBTOOL_SCRIPT = $"dotnet tool uninstall {Constants.DATABASE_TOOL} -g";
+
+    private const string INSTALL_DATABASE_SCRIPT =
+        "dotnet kentico-xperience-dbmanager --" +
+        $" -s {{{nameof(InstallDatabaseOptions.ServerName)}}}" +
+        $" -d {{{nameof(InstallDatabaseOptions.DatabaseName)}}}" +
+        $" -a {{{nameof(InstallDatabaseOptions.AdminPassword)}}}" +
+        $" --use-existing-database {{{nameof(InstallDatabaseOptions.UseExistingDatabase)}}}";
+
+    // Continuous Integration
     private const string CI_STORE_SCRIPT = "dotnet run --no-build --kxp-ci-store";
     private const string CI_RESTORE_SCRIPT = "dotnet run --no-build --kxp-ci-restore";
-    private const string CD_NEW_CONFIG_SCRIPT = "dotnet run --no-build -- --kxp-cd-config --path " +
-        $"{nameof(ContinuousDeploymentConfig.ConfigPath)}";
-    private const string CD_STORE_SCRIPT = "dotnet run --no-build -- --kxp-cd-store --repository-path " +
-        $"{nameof(ContinuousDeploymentConfig.RepositoryPath)} --config-path {nameof(ContinuousDeploymentConfig.ConfigPath)}";
-    private const string CD_RESTORE_SCRIPT = "dotnet run -- --kxp-cd-restore --repository-path " +
-        $"{nameof(ContinuousDeploymentConfig.RepositoryPath)}";
+
+    // Continuous Deployment
+    private const string CD_NEW_CONFIG_SCRIPT =
+        "dotnet run --no-build -- --kxp-cd-config" +
+        $" --path {{{nameof(ContinuousDeploymentConfig.ConfigPath)}}}";
+
+    private const string CD_STORE_SCRIPT =
+        "dotnet run --no-build -- --kxp-cd-store" +
+        $" --repository-path {{{nameof(ContinuousDeploymentConfig.RepositoryPath)}}}" +
+        $" --config-path {{{nameof(ContinuousDeploymentConfig.ConfigPath)}}}";
+
+    private const string CD_RESTORE_SCRIPT =
+        "dotnet run -- --kxp-cd-restore" +
+        $" --repository-path {{{nameof(ContinuousDeploymentConfig.RepositoryPath)}}}";
+
+    // Other project tools
     private const string MACRO_SCRIPT = "dotnet run --no-build -- --kxp-resign-macros";
-    private const string CODEGEN_SCRIPT = "dotnet run --no-build -- --kxp-codegen --skip-confirmation " +
-        $"--type {nameof(CodeGenerateOptions.Type)} --location {nameof(CodeGenerateOptions.Location)} " +
-        $"--include {nameof(CodeGenerateOptions.Include)} --exclude {nameof(CodeGenerateOptions.Exclude)} " +
-        $"--with-provider-class {nameof(CodeGenerateOptions.WithProviderClass)}";
-    private const string DELETE_FOLDER_SCRIPT = $"Remove-Item -LiteralPath {nameof(ToolProfile.WorkingDirectory)} -Recurse -Force";
+
+    private const string CODEGEN_SCRIPT =
+        "dotnet run --no-build -- --kxp-codegen" +
+        " --skip-confirmation" +
+        $" --type {{{nameof(CodeGenerateOptions.Type)}}}" +
+        $" --location {{{nameof(CodeGenerateOptions.Location)}}}" +
+        $" --include {{{nameof(CodeGenerateOptions.Include)}}}" +
+        $" --exclude {{{nameof(CodeGenerateOptions.Exclude)}}}" +
+        $" --with-provider-class {{{nameof(CodeGenerateOptions.WithProviderClass)}}}";
+
+    // File system
+    private const string MKDIR_SCRIPT = "mkdir";
+    private const string DELETE_FOLDER_SCRIPT = $"Remove-Item -LiteralPath {{{nameof(ToolProfile.WorkingDirectory)}}} -Recurse -Force";
 
 
     public IScriptBuilder AppendAllowScripts(bool allowScripts)
@@ -195,36 +230,10 @@ public class ScriptBuilder : IScriptBuilder
             return this;
         }
 
-        // Replace all placeholders in script with quoted object values if non-null or empty
-        foreach (var prop in dataObject.GetType().GetProperties())
-        {
-            object? rawValue = prop.GetValue(dataObject);
-            string value = rawValue?.ToString() ?? string.Empty;
-            if (string.IsNullOrEmpty(value))
-            {
-                continue;
-            }
-
-            // Booleans can't contain special characters and are passed as bare switch values
-            string quotedValue = rawValue is bool ? value : Quote(value);
-            currentScript = currentScript.Replace(prop.Name, quotedValue);
-        }
+        var placeholderValues = GetPlaceholderValues(dataObject);
+        currentScript = placeholderRegex.Replace(currentScript, placeholder => GetReplacement(placeholder, placeholderValues));
 
         return this;
-    }
-
-
-    /// <summary>
-    /// Quotes a value for the current script. <see cref="ScriptType.DeleteDirectory"/> and <see cref="ScriptType.CreateDirectory"/>
-    /// run PowerShell cmdlets, while all other scripts pass the value to a native executable.
-    /// </summary>
-    private string Quote(string? value)
-    {
-        value ??= string.Empty;
-
-        return currentScriptType is ScriptType.DeleteDirectory or ScriptType.CreateDirectory
-            ? PowerShellQuoteHelper.QuoteLiteral(value)
-            : PowerShellQuoteHelper.QuoteNativeArgument(value);
     }
 
 
@@ -261,6 +270,55 @@ public class ScriptBuilder : IScriptBuilder
         };
 
         return this;
+    }
+
+
+    /// <summary>
+    /// Gets the quoted value of each property of <paramref name="dataObject"/>, keyed by property name. Properties
+    /// without a value are skipped, so their placeholders remain in the script.
+    /// </summary>
+    private Dictionary<string, string> GetPlaceholderValues(object dataObject)
+    {
+        var placeholderValues = new Dictionary<string, string>();
+        foreach (var property in dataObject.GetType().GetProperties())
+        {
+            object? value = property.GetValue(dataObject);
+            string? valueText = value?.ToString();
+            if (string.IsNullOrEmpty(valueText))
+            {
+                continue;
+            }
+
+            // Booleans can't contain special characters and are passed as bare switch values
+            placeholderValues[property.Name] = value is bool ? valueText : Quote(valueText);
+        }
+
+        return placeholderValues;
+    }
+
+
+    /// <summary>
+    /// Returns the value for <paramref name="placeholder"/>, or the placeholder itself if there's no value for it.
+    /// </summary>
+    private static string GetReplacement(Match placeholder, Dictionary<string, string> placeholderValues)
+    {
+        string propertyName = placeholder.Groups["propertyName"].Value;
+
+        return placeholderValues.TryGetValue(propertyName, out string? value) ? value : placeholder.Value;
+    }
+
+
+    /// <summary>
+    /// Quotes a value for the current script. <see cref="ScriptType.DeleteDirectory"/> and <see cref="ScriptType.CreateDirectory"/>
+    /// run PowerShell cmdlets, while all other scripts pass the value to a native executable.
+    /// </summary>
+    private string Quote(string? value)
+    {
+        value ??= string.Empty;
+
+        return currentScriptType is ScriptType.DeleteDirectory or ScriptType.CreateDirectory
+            ? PowerShellQuoteHelper.QuoteLiteral(value)
+            : PowerShellQuoteHelper.QuoteNativeArgument(value);
     }
 }
 

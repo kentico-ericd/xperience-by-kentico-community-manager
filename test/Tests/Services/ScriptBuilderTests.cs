@@ -132,4 +132,59 @@ public class ScriptBuilderTests
 
         Assert.That(script, Does.StartWith("dotnet kentico-xperience-dbmanager"));
     }
+
+
+    [Test]
+    public void GenerateCodeScript_LocationContainsPlaceholderName_LocationUnchanged()
+    {
+        var options = new CodeGenerateOptions
+        {
+            Type = CodeGenerateOptions.TYPE_CLASSES,
+            Location = @"C:\Sites\ExcludedSites\Include\MySite",
+            Include = "*",
+            Exclude = "test"
+        };
+        string script = scriptBuilder.SetScript(ScriptType.GenerateCode).WithPlaceholders(options).Build();
+
+        Assert.That(script, Does.Contain(@"--location 'C:\Sites\ExcludedSites\Include\MySite'"));
+    }
+
+
+    [Test]
+    public void GenerateCodeScript_IncludeContainsPlaceholderName_IncludeUnchanged()
+    {
+        var options = new CodeGenerateOptions
+        {
+            Type = CodeGenerateOptions.TYPE_CLASSES,
+            Include = "Exclude*",
+            Exclude = "test"
+        };
+        string script = scriptBuilder.SetScript(ScriptType.GenerateCode).WithPlaceholders(options).Build();
+
+        Assert.That(script, Does.Contain("--include 'Exclude*' --exclude 'test'"));
+    }
+
+
+    [Test]
+    public void GenerateCodeScript_ValueContainsBraces_ValueUnchanged()
+    {
+        var options = new CodeGenerateOptions
+        {
+            Type = CodeGenerateOptions.TYPE_CLASSES,
+            Location = "/{type}/{dataClassNamespace}/{Exclude}"
+        };
+        string script = scriptBuilder.SetScript(ScriptType.GenerateCode).WithPlaceholders(options).Build();
+
+        Assert.That(script, Does.Contain("--location '/{type}/{dataClassNamespace}/{Exclude}'"));
+    }
+
+
+    [Test]
+    public void GenerateCodeScript_PropertyWithoutValue_PlaceholderRemains()
+    {
+        var options = new CodeGenerateOptions { Type = null };
+        string script = scriptBuilder.SetScript(ScriptType.GenerateCode).WithPlaceholders(options).Build();
+
+        Assert.That(script, Does.Contain("--type {Type}"));
+    }
 }
