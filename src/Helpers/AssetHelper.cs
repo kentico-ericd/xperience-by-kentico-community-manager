@@ -55,10 +55,17 @@ public static class AssetHelper
 
         if (exists)
         {
-            var dirInfo = new DirectoryInfo(fullPath);
-            var allFiles = dirInfo.GetFiles("*", SearchOption.AllDirectories);
-            statistic.FileCount = allFiles.Length;
-            statistic.DirectorySizeMB = allFiles.Sum(f => f.Length) / (double)1048576;
+            // Enumerate rather than list the files, so large asset folders aren't all held in memory at once
+            int fileCount = 0;
+            long totalBytes = 0;
+            foreach (var file in new DirectoryInfo(fullPath).EnumerateFiles("*", SearchOption.AllDirectories))
+            {
+                fileCount++;
+                totalBytes += file.Length;
+            }
+
+            statistic.FileCount = fileCount;
+            statistic.DirectorySizeMB = totalBytes / (double)1048576;
         }
 
         statistics.Add(statistic);

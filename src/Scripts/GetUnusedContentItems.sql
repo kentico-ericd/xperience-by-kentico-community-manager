@@ -11,3 +11,4 @@ WHERE
 		FROM
 			CMS_ContentItemReference r
 	)
+ORDER BY ContentItemID
