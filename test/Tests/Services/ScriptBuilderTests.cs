@@ -100,4 +100,36 @@ public class ScriptBuilderTests
 
         Assert.That(script, Is.EqualTo(expected));
     }
+
+
+    [Test]
+    public void DatabaseInstallScript_UseGlobalTool_RemovesOnlyLeadingDotnet()
+    {
+        var options = new InstallDatabaseOptions
+        {
+            AdminPassword = "dotnetPW",
+            DatabaseName = "dotnet_db",
+            ServerName = "dotnet-server"
+        };
+        string script = scriptBuilder.SetScript(ScriptType.DatabaseInstall)
+            .WithPlaceholders(options)
+            .UseGlobalTool(true)
+            .Build();
+        string expected = $"kentico-xperience-dbmanager -- -s 'dotnet-server' -d 'dotnet_db' -a 'dotnetPW' " +
+            $"--use-existing-database {options.UseExistingDatabase}";
+
+        Assert.That(script, Is.EqualTo(expected));
+    }
+
+
+    [Test]
+    public void DatabaseInstallScript_UseGlobalToolFalse_KeepsDotnet()
+    {
+        string script = scriptBuilder.SetScript(ScriptType.DatabaseInstall)
+            .WithPlaceholders(validDatabaseOptions)
+            .UseGlobalTool(false)
+            .Build();
+
+        Assert.That(script, Does.StartWith("dotnet kentico-xperience-dbmanager"));
+    }
 }

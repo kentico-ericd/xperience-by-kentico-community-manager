@@ -83,6 +83,14 @@ public interface IScriptBuilder : IService
 
 
     /// <summary>
+    /// Removes the leading "dotnet" command if <paramref name="useGlobalTool"/> is true and the script is
+    /// <see cref="ScriptType.DatabaseInstall"/>, so that the globally installed database tool is run instead of the
+    /// project's local tool.
+    /// </summary>
+    public IScriptBuilder UseGlobalTool(bool useGlobalTool);
+
+
+    /// <summary>
     /// Replaces script placeholders with the values of the object properties. If a property is <c>null</c> or emtpy,
     /// the placeholder remains in the script.
     /// </summary>

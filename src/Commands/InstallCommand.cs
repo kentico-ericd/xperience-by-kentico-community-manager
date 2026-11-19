@@ -153,19 +153,16 @@ public class InstallCommand(
 
         AnsiConsole.MarkupLineInterpolated($"[{Constants.EMPHASIS_COLOR}]Running database creation script...[/]");
 
-        var databaseScriptBuilder = scriptBuilder.SetScript(ScriptType.DatabaseInstall).WithPlaceholders(options);
+        // Database-only install runs the global tool, as there is no project with a local tool
+        var databaseScriptBuilder = scriptBuilder.SetScript(ScriptType.DatabaseInstall)
+            .WithPlaceholders(options)
+            .UseGlobalTool(isDatabaseOnly);
         if (options.DatabaseAuthenticationType?
             .Equals(InstallDatabaseOptions.AUTHENTICATION_USER, StringComparison.InvariantCultureIgnoreCase) ?? false)
         {
             databaseScriptBuilder.AppendDatabaseCredentials(options.DatabaseUserName, options.DatabasePassword);
         }
         string databaseScript = databaseScriptBuilder.Build();
-
-        // Database-only install requires removal of "dotnet" from the script to run global tool
-        if (isDatabaseOnly)
-        {
-            databaseScript = databaseScript.Replace("dotnet", "");
-        }
 
         await shellRunner.Execute(new(databaseScript)
         {

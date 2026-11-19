@@ -176,6 +176,18 @@ public class ScriptBuilder : IScriptBuilder
     }
 
 
+    public IScriptBuilder UseGlobalTool(bool useGlobalTool)
+    {
+        const string dotnetPrefix = "dotnet ";
+        if (useGlobalTool && currentScriptType.Equals(ScriptType.DatabaseInstall) && currentScript.StartsWith(dotnetPrefix))
+        {
+            currentScript = currentScript[dotnetPrefix.Length..];
+        }
+
+        return this;
+    }
+
+
     public IScriptBuilder WithPlaceholders(object? dataObject)
     {
         if (dataObject is null)
