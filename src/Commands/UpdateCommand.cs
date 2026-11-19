@@ -2,6 +2,7 @@
 
 using XperienceCommunity.Manager.Commands.Base;
 using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Helpers;
 using XperienceCommunity.Manager.Options;
 using XperienceCommunity.Manager.Services;
 using XperienceCommunity.Manager.Services.Interfaces;
@@ -20,10 +21,12 @@ public class UpdateCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilde
         "kentico.xperience.admin",
         "kentico.xperience.azurestorage",
         "kentico.xperience.cloud",
-        "kentico.xperience.graphql",
         "kentico.xperience.imageprocessing",
         "kentico.xperience.webapp",
-        "kentico.xperience.mjml"
+        "kentico.xperience.mjml",
+        "kentico.xperience.amazonstorage",
+        "kentico.xperience.sendgrid",
+        "kentico.xperience.managementapi",
     ];
 
 
@@ -54,9 +57,16 @@ public class UpdateCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilde
             return;
         }
 
+        // Find the packages to update before prompting, so the user isn't asked for a version if there's nothing to update
+        var packagesToUpdate = GetPackagesToUpdate(profile);
+        if (StopProcessing)
+        {
+            return;
+        }
+
         var options = await wizard.Run();
 
-        await UpdatePackages(options, profile);
+        await UpdatePackages(options, profile, packagesToUpdate);
         await BuildProject(profile);
         await UpdateDatabase(profile);
     }
@@ -91,9 +101,40 @@ public class UpdateCommand(IShellRunner shellRunner, IScriptBuilder scriptBuilde
     }
 
 
-    private async Task UpdatePackages(UpdateOptions options, ToolProfile? profile)
+    /// <summary>
+    /// Gets the Xperience packages which the project already references.
+    /// </summary>
+    private List<string> GetPackagesToUpdate(ToolProfile? profile)
     {
-        foreach (string package in packageNames)
+        if (string.IsNullOrEmpty(profile?.WorkingDirectory) || string.IsNullOrEmpty(profile.ProjectName))
+        {
+            LogError("Couldn't load the profile's working directory or project name.");
+
+            return [];
+        }
+
+        string projectFilePath = Path.Combine(profile.WorkingDirectory, $"{profile.ProjectName}.csproj");
+        if (!File.Exists(projectFilePath))
+        {
+            LogError($"The project file {projectFilePath} was not found.");
+
+            return [];
+        }
+
+        var referencedPackages = ProjectFileHelper.GetPackageReferences(projectFilePath);
+        var packagesToUpdate = packageNames.Where(referencedPackages.Contains).ToList();
+        if (packagesToUpdate.Count == 0)
+        {
+            LogError($"The project file {projectFilePath} doesn't reference any Xperience by Kentico packages.");
+        }
+
+        return packagesToUpdate;
+    }
+
+
+    private async Task UpdatePackages(UpdateOptions options, ToolProfile? profile, IEnumerable<string> packagesToUpdate)
+    {
+        foreach (string package in packagesToUpdate)
         {
             if (StopProcessing)
             {

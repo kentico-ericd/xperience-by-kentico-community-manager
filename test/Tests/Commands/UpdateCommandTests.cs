@@ -17,6 +17,7 @@ namespace XperienceCommunity.Manager.Tests.Tests.Commands;
 public class UpdateCommandTests : TestBase
 {
     private const string PROJECT = "myproj";
+    private const string WORKING_DIRECTORY = "./Data/project";
     private readonly Version version = new(1, 0, 0);
     private readonly IShellRunner shellRunner = Substitute.For<IShellRunner>();
     private readonly IWizard<UpdateOptions> updateWizard = Substitute.For<IWizard<UpdateOptions>>();
@@ -35,31 +36,60 @@ public class UpdateCommandTests : TestBase
 
 
     [Test]
-    public async Task Execute_CallsUpdateScripts()
+    public async Task Execute_UpdatesOnlyReferencedPackages()
     {
         ToolProfile profile = new()
         {
-            ProjectName = PROJECT
+            ProjectName = PROJECT,
+            WorkingDirectory = WORKING_DIRECTORY
         };
         var command = new UpdateCommand(shellRunner, new ScriptBuilder(), updateWizard);
         await command.PreExecute(profile, string.Empty);
         await command.Execute(profile, string.Empty);
 
-        string[] packageNames =
+        // Referenced in Data/project/myproj.csproj
+        string[] referencedPackages =
         [
             "kentico.xperience.admin",
+            "kentico.xperience.imageprocessing",
+            "kentico.xperience.webapp"
+        ];
+        string[] unreferencedPackages =
+        [
             "kentico.xperience.azurestorage",
             "kentico.xperience.cloud",
             "kentico.xperience.graphql",
-            "kentico.xperience.imageprocessing",
-            "kentico.xperience.webapp",
             "kentico.xperience.mjml"
         ];
 
-        foreach (string p in packageNames)
+        Assert.That(command.Errors, Is.Empty);
+        foreach (string p in referencedPackages)
         {
             shellRunner.Received().Execute(Arg.Is<ShellOptions>(x => x.Script.Equals(
                 $"dotnet add package '{p}' --version {version} --project '{PROJECT}.csproj'")));
         }
+
+        foreach (string p in unreferencedPackages)
+        {
+            shellRunner.DidNotReceive().Execute(Arg.Is<ShellOptions>(x => x.Script.Contains($"'{p}'")));
+        }
+    }
+
+
+    [Test]
+    public async Task Execute_ProjectFileMissing_LogsErrorAndRunsNothing()
+    {
+        ToolProfile profile = new()
+        {
+            ProjectName = "missing",
+            WorkingDirectory = WORKING_DIRECTORY
+        };
+        var command = new UpdateCommand(shellRunner, new ScriptBuilder(), updateWizard);
+        await command.PreExecute(profile, string.Empty);
+        await command.Execute(profile, string.Empty);
+
+        Assert.That(command.Errors, Has.Count.EqualTo(1));
+        await updateWizard.DidNotReceive().Run();
+        shellRunner.DidNotReceive().Execute(Arg.Any<ShellOptions>());
     }
 }

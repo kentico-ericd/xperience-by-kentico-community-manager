@@ -28,5 +28,9 @@
     <None Update="Data\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <!-- Project files are excluded from the default items, so include the test project file explicitly -->
+    <None Include="Data\**\*.csproj">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
