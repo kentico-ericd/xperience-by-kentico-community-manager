@@ -5,32 +5,16 @@ using System.Reflection;
 using XperienceCommunity.Manager.Commands.Base;
 using XperienceCommunity.Manager.Configuration;
 using XperienceCommunity.Manager.Helpers;
+using XperienceCommunity.Manager.Repositories;
 
 namespace XperienceCommunity.Manager.Commands;
 
 /// <summary>
 /// A command which displays the current tool version, a list of commands, and their descriptions.
 /// </summary>
-public class HelpCommand : AbstractCommand
+/// <param name="commandRepository">Resolved lazily, as this command is itself part of the repository.</param>
+public class HelpCommand(Lazy<ICommandRepository> commandRepository) : AbstractCommand
 {
-    /// <summary>
-    /// Workaround for circular dependency when commands are injected into this command.
-    /// </summary>
-    private readonly IEnumerable<ICommand> commands =
-    [
-        new ProfileCommand(),
-        new InstallCommand(),
-        new DeleteCommand(),
-        new UpdateCommand(),
-        new ContinuousIntegrationCommand(),
-        new ContinuousDeploymentCommand(),
-        new MacroCommand(),
-        new BuildCommand(),
-        new SettingsCommand(),
-        new CodeGenerateCommand(),
-        new ReportCommand()
-    ];
-
 
     public override IEnumerable<string> Keywords => ["?", "help"];
 
@@ -60,7 +44,7 @@ public class HelpCommand : AbstractCommand
             .AddColumn("Command")
             .AddColumn("Parameters")
             .AddColumn("Description");
-        foreach (var command in commands)
+        foreach (var command in commandRepository.Value.GetAll())
         {
             table.AddRow(
                 string.Join(", ", command.Keywords),

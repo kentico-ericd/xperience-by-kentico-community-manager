@@ -34,14 +34,6 @@ public class InstallCommand(
     public override string Description => "Installs a new XbK instance. The 'db' parameter installs only a database";
 
 
-    /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
-    /// </summary>
-#pragma warning disable CS8625
-    internal InstallCommand() : this(null, null, null, null, null) { }
-#pragma warning restore CS8625
-
-
     public override async Task Execute(ToolProfile? profile, string? action)
     {
         if (StopProcessing)

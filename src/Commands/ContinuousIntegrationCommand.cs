@@ -30,14 +30,6 @@ public class ContinuousIntegrationCommand(IShellRunner shellRunner, IScriptBuild
     public override bool RequiresProfile => true;
 
 
-    /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
-    /// </summary>
-#pragma warning disable CS8625
-    internal ContinuousIntegrationCommand() : this(null, null) { }
-#pragma warning restore CS8625
-
-
     public override async Task PreExecute(ToolProfile? profile, string? action)
     {
         if (string.IsNullOrEmpty(action) || !Parameters.Any(p => p.Equals(action, StringComparison.OrdinalIgnoreCase)))

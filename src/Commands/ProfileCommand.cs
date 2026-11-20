@@ -24,14 +24,6 @@ public class ProfileCommand(IConfigManager configManager, IWizard<NewProfileOpti
     public override string Description => "Manage and switch installation profiles";
 
 
-    /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
-    /// </summary>
-#pragma warning disable CS8625
-    internal ProfileCommand() : this(null, null) { }
-#pragma warning restore CS8625
-
-
     public override async Task PreExecute(ToolProfile? profile, string? action)
     {
         if (StopProcessing)

@@ -34,14 +34,6 @@ public class DeleteCommand(
     public override bool RequiresProfile => true;
 
 
-    /// <summary>
-    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
-    /// </summary>
-#pragma warning disable CS8625
-    internal DeleteCommand() : this(null, null, null, null, null) { }
-#pragma warning restore CS8625
-
-
     public override async Task Execute(ToolProfile? profile, string? action)
     {
         deleteConfirmed = await AnsiConsole.ConfirmAsync($"This will [{Constants.ERROR_COLOR}]delete[/] the current profile's physical folder " +
