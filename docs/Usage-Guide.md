@@ -153,6 +153,35 @@ xman report
 
 ![Report](/img/report.png)
 
+The report includes the following data, in order:
+
+- Class consistency
+  - Database tables without a class representation
+  - Classes without a database table
+- Assets
+  - Recognized asset subfolders with file count and total size
+- Channel stats
+  - All channels and number of items per channel
+- Workspace stats
+  - All workspaces and number of items per workspace
+- Unused content items
+  - Top 50 reusable content items that are not referenced by any other item or page
+- Enabled users with admin access
+  - All enabled users with administration access
+- Largest tables
+  - Top 10 largest database tables by data consumed
+- Common Event log errors
+  - Top 10 errors with similar Source, EventCode, and EventDescription, ordered by the number of occurrences
+- Scheduled tasks
+  - Currently-running tasks
+  - Single-run tasks that have not executed in the last 24hrs
+  - Recurring tasks that have never executed
+- Content synchronization
+  - Incoming tasks that have failed
+  - Incoming tasks in a transitional status
+  - Incoming tasks missing data in the /synchronizations folder
+  - Folders in /synchronizations that have no matching incoming task
+
 ### Running Continuous Integration
 
 You can use the `ci` command to serialize the database or restore the CI repository to the database. Your project must have been built at least once to run CI commands.
