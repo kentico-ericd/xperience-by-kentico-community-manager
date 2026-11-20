@@ -50,6 +50,66 @@ public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
     }
 
 
+    public async Task RenderContentSyncReport(string connectionString, string workingDirectory, string? customDirectoryName)
+    {
+        try
+        {
+            var syncResults = new List<IEnumerable<JObject>>()
+            {
+                await sqlExecutor.ExecuteQuery(connectionString, "SynchronizationFailedRestores.sql"),
+                await sqlExecutor.ExecuteQuery(connectionString, "SynchronizationsTransitionalStatus.sql")
+            };
+
+            string synchronizationRootFolder = AssetHelper.GetContentSyncDirectoryPath(workingDirectory, customDirectoryName);
+            if (Directory.Exists(synchronizationRootFolder))
+            {
+                var incomingTasks = await sqlExecutor.ExecuteQuery(connectionString, "SynchronizationAllIncomingTasks.sql");
+
+                // Add tasks with missing synchronization data folder
+                syncResults.Add(incomingTasks.Where(task =>
+                {
+                    string taskGuid = task.Value<Guid>("SynchronizationGUID").ToString();
+
+                    return !Directory.Exists(Path.Combine(synchronizationRootFolder, taskGuid));
+                }).Select(task =>
+                // Can't modify JObject property name, so create a new JObject with better headers
+                new JObject()
+                {
+                    new JProperty("Restore task with no data", task.Value<Guid>("SynchronizationGUID")),
+                    task.Property("Created by"),
+                    task.Property("Created on"),
+                }));
+
+                // Add data folders with no corresponding synchronization task
+                string[] syncDataFolderPaths = Directory.GetDirectories(synchronizationRootFolder);
+                syncResults.Add(syncDataFolderPaths.Where(folderPath =>
+                        !incomingTasks.Any(task => task.Value<Guid>("SynchronizationGUID").ToString() == Path.GetFileName(folderPath))
+                    ).Select(folderPath =>
+                        new JObject()
+                        {
+                        new JProperty("Data folder with no task", Path.GetFileName(folderPath))
+                        }
+                    ));
+            }
+
+            string header = "Content synchronization";
+            if (syncResults.All(t => !t.Any()))
+            {
+                RenderSection(header, new Markup($"[{Constants.SUCCESS_COLOR}]No content synchronization issues![/]"));
+            }
+            else
+            {
+                var tablesToRender = syncResults.Where(t => t.Any()).Select(GetTable);
+                RenderSection(header, [.. tablesToRender]);
+            }
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+    }
+
+
     public async Task RenderClassConsistencyReport(string connectionString)
     {
         try
@@ -239,7 +299,7 @@ public class ReportRenderer(ISqlExecutor sqlExecutor) : IReportRenderer
 
     private static string GetFormattedValue(JToken token)
     {
-        string stringValue = token.Value<string>() ?? string.Empty;
+        string stringValue = token.Value<object>()?.ToString() ?? string.Empty;
         stringValue = stringValue.Length > MAX_COLUMN_CHARS
             ? stringValue[..MAX_COLUMN_CHARS]
             : stringValue;

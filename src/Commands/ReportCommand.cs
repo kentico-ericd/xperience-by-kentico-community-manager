@@ -71,6 +71,7 @@ public class ReportCommand(IReportRenderer reportRenderer, IAppSettingsManager a
         await reportRenderer.RenderTableSizeReport(connectionString);
         await reportRenderer.RenderEventLogReport(connectionString);
         await reportRenderer.RenderScheduledTaskReport(connectionString);
+        await reportRenderer.RenderContentSyncReport(connectionString, workingDirectory, options.CustomAssetDirectoryName);
 
         if (options.DoExport)
         {

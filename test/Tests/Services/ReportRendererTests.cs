@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System.Reflection;
+
+using Newtonsoft.Json.Linq;
+
 using NSubstitute;
 
 using NUnit.Framework;
@@ -21,6 +24,10 @@ public class ReportRendererTests
     [OneTimeSetUp]
     public void OneTimeSetUp() =>
         reportRenderer = new ReportRenderer(sqlExecutor);
+
+
+    [TearDown]
+    public void TearDown() => sqlExecutor.ClearReceivedCalls();
 
 
     [Test]
@@ -98,6 +105,28 @@ public class ReportRendererTests
     }
 
 
+    [Test]
+    public async Task RenderContentSyncReport_WithSyncFolder_RunsAllQueries()
+    {
+        await reportRenderer.RenderContentSyncReport(CONNSTRING, GetWorkingDirectory(), "customAssetDir");
+
+        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "SynchronizationFailedRestores.sql");
+        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "SynchronizationsTransitionalStatus.sql");
+        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "SynchronizationAllIncomingTasks.sql");
+    }
+
+
+    [Test]
+    public async Task RenderContentSyncReport_NoSyncFolder_SkipsFolderChecks()
+    {
+        await reportRenderer.RenderContentSyncReport(CONNSTRING, GetWorkingDirectory(), null);
+
+        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "SynchronizationFailedRestores.sql");
+        await sqlExecutor.Received().ExecuteQuery(CONNSTRING, "SynchronizationsTransitionalStatus.sql");
+        await sqlExecutor.DidNotReceive().ExecuteQuery(CONNSTRING, "SynchronizationAllIncomingTasks.sql");
+    }
+
+
     [TestCase(true)]
     [TestCase(false)]
     public async Task Export_ExportsData(bool exportAsText)
@@ -126,5 +155,17 @@ public class ReportRendererTests
         }
 
         Directory.Delete(workingDirectory, true);
+    }
+
+
+    private static string GetWorkingDirectory()
+    {
+        string? location = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        if (string.IsNullOrEmpty(location))
+        {
+            throw new InvalidOperationException("Execution path not found.");
+        }
+
+        return Path.Combine(location, "Data");
     }
 }

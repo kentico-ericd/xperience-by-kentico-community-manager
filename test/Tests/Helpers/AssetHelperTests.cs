@@ -18,10 +18,11 @@ public class AssetHelperTests
         var mediaStatistic = statistics.FirstOrDefault(s => s.DirectoryName?.Equals("media") ?? false);
         var bizFormFilesStatistic = statistics.FirstOrDefault(s => s.DirectoryName?.Equals("BizFormFiles") ?? false);
         var contentItemStatistic = statistics.FirstOrDefault(s => s.DirectoryName?.Equals("contentitems") ?? false);
+        var synchronizationStatistic = statistics.FirstOrDefault(s => s.DirectoryName?.Equals("synchronizations") ?? false);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(statistics.Count(), Is.EqualTo(3));
+            Assert.That(statistics.Count(), Is.EqualTo(4));
             Assert.That(mediaStatistic?.Exists, Is.True);
             Assert.That(mediaStatistic?.FileCount, Is.EqualTo(3));
             Assert.That(mediaStatistic?.DirectorySizeMB, Is.InRange(0.0029, 0.003));
@@ -31,6 +32,7 @@ public class AssetHelperTests
             Assert.That(contentItemStatistic?.Exists, Is.True);
             Assert.That(contentItemStatistic?.FileCount, Is.EqualTo(2));
             Assert.That(contentItemStatistic?.DirectorySizeMB, Is.InRange(0.0019, 0.002));
+            Assert.That(synchronizationStatistic?.Exists, Is.False);
         }
     }
 
@@ -42,10 +44,11 @@ public class AssetHelperTests
         var mediaStatistic = statistics.FirstOrDefault(s => s.DirectoryName?.Equals("media") ?? false);
         var bizFormFilesStatistic = statistics.FirstOrDefault(s => s.DirectoryName?.Equals("BizFormFiles") ?? false);
         var contentItemStatistic = statistics.FirstOrDefault(s => s.DirectoryName?.Equals("contentitems") ?? false);
+        var synchronizationStatistic = statistics.FirstOrDefault(s => s.DirectoryName?.Equals("synchronizations") ?? false);
 
         using (Assert.EnterMultipleScope())
         {
-            Assert.That(statistics.Count(), Is.EqualTo(3));
+            Assert.That(statistics.Count(), Is.EqualTo(4));
             Assert.That(mediaStatistic?.Exists, Is.False);
             Assert.That(bizFormFilesStatistic?.Exists, Is.True);
             Assert.That(bizFormFilesStatistic?.FileCount, Is.EqualTo(2));
@@ -53,6 +56,9 @@ public class AssetHelperTests
             Assert.That(contentItemStatistic?.Exists, Is.True);
             Assert.That(contentItemStatistic?.FileCount, Is.EqualTo(1));
             Assert.That(contentItemStatistic?.DirectorySizeMB, Is.InRange(0.0009, 0.001));
+            Assert.That(synchronizationStatistic?.Exists, Is.True);
+            Assert.That(synchronizationStatistic?.FileCount, Is.EqualTo(1));
+            Assert.That(synchronizationStatistic?.DirectorySizeMB, Is.InRange(0.0009, 0.001));
         }
     }
 

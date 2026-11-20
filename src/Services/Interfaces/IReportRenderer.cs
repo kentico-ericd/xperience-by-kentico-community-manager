@@ -20,6 +20,15 @@ public interface IReportRenderer : IService
 
 
     /// <summary>
+    /// Displays tables showing content synchronization issues.
+    /// </summary>
+    /// <param name="connectionString">The connection string to the database.</param>
+    /// <param name="workingDirectory">The root directory of the Xperience by Kentico instance.</param>
+    /// <param name="customDirectoryName">The name of the folder containing assets, if not using the default name.</param>
+    public Task RenderContentSyncReport(string connectionString, string workingDirectory, string? customDirectoryName);
+
+
+    /// <summary>
     /// Displays tables related to the CMS_Class database table.
     /// </summary>
     public Task RenderClassConsistencyReport(string connectionString);

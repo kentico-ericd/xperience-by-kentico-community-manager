@@ -16,8 +16,7 @@ public static class AssetHelper
     /// <param name="customDirectoryName">The name of the folder containing assets, if not using the default name.</param>
     public static IEnumerable<AssetStatistic> GetAssetStatistics(string workingDirectory, string? customDirectoryName = null)
     {
-        customDirectoryName ??= ASSET_DIRNAME;
-        string assetDir = Path.Combine(workingDirectory, customDirectoryName);
+        string assetDir = GetAssetDirectoryPath(workingDirectory, customDirectoryName);
         if (!Directory.Exists(assetDir))
         {
             return [];
@@ -30,6 +29,32 @@ public static class AssetHelper
         AddStatistic(result, assetDir, CONTENT_SYNC_DIRNAME);
 
         return result;
+    }
+
+
+    /// <summary>
+    /// Gets the absolute path of the Content Synchronization data folder.
+    /// </summary>
+    /// <param name="workingDirectory">The root directory of the Xperience by Kentico instance.</param>
+    /// <param name="customDirectoryName">The name of the folder containing assets, if not using the default name.</param>
+    public static string GetContentSyncDirectoryPath(string workingDirectory, string? customDirectoryName = null)
+    {
+        string assetDir = GetAssetDirectoryPath(workingDirectory, customDirectoryName);
+
+        return Path.Combine(assetDir, CONTENT_SYNC_DIRNAME);
+    }
+
+
+    /// <summary>
+    /// Gets the absolute path of the assets folder.
+    /// </summary>
+    /// <param name="workingDirectory">The root directory of the Xperience by Kentico instance.</param>
+    /// <param name="customDirectoryName">The name of the folder containing assets, if not using the default name.</param>
+    public static string GetAssetDirectoryPath(string workingDirectory, string? customDirectoryName = null)
+    {
+        customDirectoryName ??= ASSET_DIRNAME;
+
+        return Path.Combine(workingDirectory, customDirectoryName);
     }
 
 
