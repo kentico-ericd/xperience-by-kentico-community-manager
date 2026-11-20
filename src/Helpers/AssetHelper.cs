@@ -6,6 +6,7 @@ public static class AssetHelper
     private const string MEDIA_DIRNAME = "media";
     private const string BIZFORM_DIRNAME = "BizFormFiles";
     private const string CONTENT_ITEM_DIRNAME = "contentitems";
+    private const string CONTENT_SYNC_DIRNAME = "synchronizations";
 
 
     /// <summary>
@@ -26,6 +27,7 @@ public static class AssetHelper
         AddStatistic(result, assetDir, MEDIA_DIRNAME);
         AddStatistic(result, assetDir, CONTENT_ITEM_DIRNAME);
         AddStatistic(result, assetDir, BIZFORM_DIRNAME);
+        AddStatistic(result, assetDir, CONTENT_SYNC_DIRNAME);
 
         return result;
     }
