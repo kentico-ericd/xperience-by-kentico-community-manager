@@ -2,10 +2,11 @@
 
 using Microsoft.Data.SqlClient;
 
-namespace Xperience.Manager.Services
+using XperienceCommunity.Manager.Services.Interfaces;
+
+namespace XperienceCommunity.Manager.Services;
+
+public class ConnectionFactory : IConnectionFactory
 {
-    public class ConnectionFactory : IConnectionFactory
-    {
-        public IDbConnection GetConnection(string connectionString) => new SqlConnection(connectionString);
-    }
+    public IDbConnection GetConnection(string connectionString) => new SqlConnection(connectionString);
 }

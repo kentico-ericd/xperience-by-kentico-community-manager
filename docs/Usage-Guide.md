@@ -6,7 +6,7 @@ The `xman.json` file contains information about the tool, your default options, 
 
 ```json
 {
-  "Version": "5.3.0.0",
+  "Version": "6.0.0.0",
   "Profiles": [
     {
       "ProfileName": "My site",
@@ -49,7 +49,7 @@ The following commands can be executed using the `xman` tool name:
 - [`s`, `settings`](#modifying-application-settings)
 - [`r`, `report`](#running-reports)
 - [`ci <store> <restore>`](#running-continuous-integration)
-- [`cd <store> <restore> <config>`](#running-continuous-deployment)
+- [`cd <store> <restore>`](#running-continuous-deployment)
 - [`p`, `profile <add> <delete> <switch>`](#managing-profiles)
 
 ### Managing profiles
@@ -93,7 +93,7 @@ Installing a new project automatically includes a database as well. If you want 
 
 ### Updating a project version
 
-This command updates the NuGet packages and database of the current profile.
+This command updates versions of any referenced Xperience by Kentico packages in the current profile. The .csproj file is expected to be located in the [WorkingDirectory](#managing-profiles) of the current profile.
 
 ```bash
 xman update
@@ -145,7 +145,7 @@ xman generate
 
 ### Running reports
 
-This command generates important data about the current profile such as content item and asset counts.
+This command generates important data about the current profile such as content item and asset counts. Reports can optionally be exported as text or HTML to your profile's `<WorkingDirectory>/XperienceReports`.
 
 ```bash
 xman report
@@ -175,16 +175,7 @@ You can customize the location of the CD files by changing the __CDRootPath__ pr
 }
 ```
 
-Your project's [CD configuration file](https://docs.kentico.com/documentation/developers-and-admins/ci-cd/configure-ci-cd-repositories/repository-configuration-templates) is automatically created when you run the `cd` command and can be manually edited to fine-tune the CD process. You can also run the `config` command to edit the configuration file using a wizard. For example, you may want to change the [__RestoreMode__](https://docs.kentico.com/documentation/developers-and-admins/ci-cd/configure-ci-cd-repositories#configure-cd-restore-mode) before restoring CD data to the database.
-
-1. Select a profile with the [`profile`](#managing-profiles) command. This determines which configuration file is modified
-1. Run the `config` command from the directory containing the [configuration file](#configuration-file), which will begin the configuration wizard:
-
-   ```bash
-   xman cd config
-   ```
-
-When you are finished development and wish to serialize the CD data to the filesystem, use the `store` command:
+Your project's [CD configuration file](https://docs.kentico.com/documentation/developers-and-admins/ci-cd/configure-ci-cd-repositories/repository-configuration-templates) is automatically created when you run the `cd` command and can be manually edited to fine-tune the CD process. When you are finished development and wish to serialize the CD data to the filesystem, use the `store` command:
 
 1. Select a profile with the [`profile`](#managing-profiles) command. This determines which project's database is serialized
 1. Run the `store` command from the directory containing the [configuration file](#configuration-file):

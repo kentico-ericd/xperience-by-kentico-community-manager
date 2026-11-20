@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "Xperience.Manager": {
+    "XperienceCommunity.Manager": {
       "commandName": "Project",
       "commandLineArgs": ""
     }

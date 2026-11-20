@@ -1,6 +1,5 @@
-namespace Xperience.Manager.Repositories
+namespace XperienceCommunity.Manager.Repositories;
+
+public interface IRepository
 {
-    public interface IRepository
-    {
-    }
 }

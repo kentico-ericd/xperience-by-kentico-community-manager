@@ -1,6 +1,5 @@
-﻿namespace Xperience.Manager.Options
+﻿namespace XperienceCommunity.Manager.Options;
+
+public interface IWizardOptions
 {
-    public interface IWizardOptions
-    {
-    }
 }

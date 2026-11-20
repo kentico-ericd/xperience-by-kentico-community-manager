@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- Test data for UpdateCommandTests and ProjectFileHelperTests. Not built. -->
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Kentico.Xperience.Admin" Version="31.0.0" />
+    <PackageReference Include="kentico.xperience.webapp" Version="31.0.0" />
+    <PackageReference Include="Kentico.Xperience.ImageProcessing" Version="31.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+
+</Project>

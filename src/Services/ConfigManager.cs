@@ -3,194 +3,192 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Xperience.Manager.Configuration;
-using Xperience.Manager.Options;
+using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Options;
+using XperienceCommunity.Manager.Services.Interfaces;
 
-namespace Xperience.Manager.Services
+namespace XperienceCommunity.Manager.Services;
+
+public class ConfigManager : IConfigManager
 {
-    public class ConfigManager : IConfigManager
+    public Task AddProfile(ToolProfile? profile) =>
+        profile is null ? throw new ArgumentNullException(nameof(profile)) : AddProfileInternal(profile);
+
+
+    public Task SetCurrentProfile(ToolProfile? profile) =>
+        profile is null ? throw new ArgumentNullException(nameof(profile)) : SetCurrentProfileInternal(profile);
+
+
+    public async Task<ToolProfile?> GetCurrentProfile()
     {
-        public Task AddProfile(ToolProfile? profile) =>
-            profile is null ? throw new ArgumentNullException(nameof(profile)) : AddProfileInternal(profile);
-
-
-        public Task SetCurrentProfile(ToolProfile? profile) =>
-            profile is null ? throw new ArgumentNullException(nameof(profile)) : SetCurrentProfileInternal(profile);
-
-
-        public async Task<ToolProfile?> GetCurrentProfile()
+        var config = await GetConfig();
+        var match = config.Profiles.FirstOrDefault(p =>
+            p.ProfileName?.Equals(config.CurrentProfile, StringComparison.OrdinalIgnoreCase) ?? false);
+        if (config.Profiles.Count == 1 &&
+            (string.IsNullOrEmpty(config.CurrentProfile) || match is null))
         {
-            var config = await GetConfig();
-            var match = config.Profiles.FirstOrDefault(p =>
-                p.ProfileName?.Equals(config.CurrentProfile, StringComparison.OrdinalIgnoreCase) ?? false);
-            if (config.Profiles.Count == 1 &&
-                (string.IsNullOrEmpty(config.CurrentProfile) || match is null))
+            // There's only 1 profile and there was no value stored in config, or non-matching value
+            // Select the only profile and save it in the config
+            var profile = config.Profiles.FirstOrDefault();
+            if (profile is not null)
             {
-                // There's only 1 profile and there was no value stored in config, or non-matching value
-                // Select the only profile and save it in the config
-                var profile = config.Profiles.FirstOrDefault();
-                if (profile is not null)
-                {
-                    await SetCurrentProfile(profile);
+                await SetCurrentProfile(profile);
 
-                    return profile;
-                }
+                return profile;
             }
-
-            return match;
         }
 
-
-        public async Task<ToolConfiguration> GetConfig()
-        {
-            if (!File.Exists(Constants.CONFIG_FILENAME))
-            {
-                throw new FileNotFoundException($"The configuration file {Constants.CONFIG_FILENAME} was not found.");
-            }
-
-            string text = await File.ReadAllTextAsync(Constants.CONFIG_FILENAME);
-            var config = JsonConvert.DeserializeObject<ToolConfiguration>(text) ?? throw new JsonReaderException($"The configuration " +
-                $"file {Constants.CONFIG_FILENAME} cannot be deserialized.");
-
-            return config;
-        }
-
-
-        public async Task EnsureConfigFile()
-        {
-            var toolVersion = Assembly.GetExecutingAssembly().GetName().Version ??
-                throw new InvalidOperationException("The tool version couldn't be retrieved.");
-            if (File.Exists(Constants.CONFIG_FILENAME))
-            {
-                await MigrateConfig(toolVersion);
-
-                return;
-            }
-
-            await WriteConfig(new ToolConfiguration
-            {
-                Version = toolVersion,
-                DefaultInstallProjectOptions = new(),
-                DefaultInstallDatabaseOptions = new()
-            });
-        }
-
-
-        public async Task<InstallProjectOptions> GetDefaultInstallProjectOptions()
-        {
-            var config = await GetConfig();
-
-            return config.DefaultInstallProjectOptions ?? new();
-        }
-
-
-        public async Task<InstallDatabaseOptions> GetDefaultInstallDatabaseOptions()
-        {
-            var config = await GetConfig();
-
-            return config.DefaultInstallDatabaseOptions ?? new();
-        }
-
-
-        public Task RemoveProfile(ToolProfile? profile) =>
-            profile is null ? throw new ArgumentNullException(nameof(profile)) : RemoveProfileInternal(profile);
-
-
-        private async Task AddProfileInternal(ToolProfile profile)
-        {
-            var config = await GetConfig();
-            if (config.Profiles.Any(p => p.ProfileName?.Equals(profile.ProfileName, StringComparison.OrdinalIgnoreCase) ?? false))
-            {
-                throw new InvalidOperationException($"There is already a profile named '{profile.ProfileName}.'");
-            }
-
-            config.Profiles.Add(profile);
-
-            await WriteConfig(config);
-        }
-
-
-        private async Task MigrateConfig(Version toolVersion)
-        {
-            var config = await GetConfig();
-            if (config.Version?.Equals(toolVersion) ?? false)
-            {
-                return;
-            }
-
-            // Perform any migrations from old config version to new version here
-            string text = await File.ReadAllTextAsync(Constants.CONFIG_FILENAME);
-            var json = JsonConvert.DeserializeObject<JObject>(text) ??
-                throw new InvalidOperationException("Unable to read configuration file for migration.");
-            if (toolVersion.Major >= 5 && toolVersion.Minor >= 0 && toolVersion.Build >= 0
-                && config.Version?.Major < 5)
-            {
-                MigrateTo500(json, config);
-            }
-            if (toolVersion.Major >= 5 && toolVersion.Minor >= 3 && toolVersion.Build >= 0
-                && config.Version?.Major <= 5 && config.Version?.Minor < 3)
-            {
-                MigrateTo530(config);
-            }
-
-            config.Version = toolVersion;
-
-            await WriteConfig(config);
-        }
-
-
-        private async Task RemoveProfileInternal(ToolProfile profile)
-        {
-            var config = await GetConfig();
-
-            // For some reason Profiles.Remove() didn't work, make a new list
-            var newProfiles = new List<ToolProfile>();
-            newProfiles.AddRange(config.Profiles.Where(p =>
-                !p.ProfileName?.Equals(profile.ProfileName, StringComparison.OrdinalIgnoreCase) ?? true));
-
-            config.Profiles = newProfiles;
-
-            await WriteConfig(config);
-        }
-
-
-        private async Task SetCurrentProfileInternal(ToolProfile profile)
-        {
-            var config = await GetConfig();
-            config.CurrentProfile = profile.ProfileName;
-            await WriteConfig(config);
-        }
-
-
-        private static Task WriteConfig(ToolConfiguration config) =>
-            File.WriteAllTextAsync(Constants.CONFIG_FILENAME, JsonConvert.SerializeObject(config, Formatting.Indented));
-
-
-        private static void MigrateTo500(JObject oldConfig, ToolConfiguration newConfig)
-        {
-            var oldInstallOptions = oldConfig["DefaultInstallOptions"];
-
-            var dbOptions = new InstallDatabaseOptions();
-            dbOptions.DatabaseName = oldInstallOptions?["DatabaseName"]?.ToString() ?? dbOptions.DatabaseName;
-            dbOptions.ServerName = oldInstallOptions?["ServerName"]?.ToString() ?? dbOptions.ServerName;
-            newConfig.DefaultInstallDatabaseOptions = dbOptions;
-
-            var projectOptions = new InstallProjectOptions();
-            projectOptions.Template = oldInstallOptions?["Template"]?.ToString() ?? projectOptions.Template;
-            projectOptions.ProjectName = oldInstallOptions?["ProjectName"]?.ToString() ?? projectOptions.ProjectName;
-            projectOptions.InstallRootPath = oldInstallOptions?["InstallRootPath"]?.ToString() ?? projectOptions.InstallRootPath;
-            projectOptions.UseCloud = bool.Parse(oldInstallOptions?["UseCloud"]?.ToString() ?? projectOptions.UseCloud.ToString());
-            string? oldVersion = oldInstallOptions?["Version"]?.ToString();
-            if (!string.IsNullOrEmpty(oldVersion))
-            {
-                projectOptions.Version = Version.Parse(oldVersion);
-            }
-
-            newConfig.DefaultInstallProjectOptions = projectOptions;
-        }
-
-
-        private static void MigrateTo530(ToolConfiguration newConfig) =>
-            newConfig.Profiles.ForEach(profile => profile.ProfileName = profile.ProjectName);
+        return match;
     }
+
+
+    public async Task<ToolConfiguration> GetConfig()
+    {
+        if (!File.Exists(Constants.CONFIG_FILENAME))
+        {
+            throw new FileNotFoundException($"The configuration file {Constants.CONFIG_FILENAME} was not found.");
+        }
+
+        string text = await File.ReadAllTextAsync(Constants.CONFIG_FILENAME);
+        var config = JsonConvert.DeserializeObject<ToolConfiguration>(text) ?? throw new JsonReaderException($"The configuration " +
+            $"file {Constants.CONFIG_FILENAME} cannot be deserialized.");
+
+        return config;
+    }
+
+
+    public async Task EnsureConfigFile()
+    {
+        var toolVersion = Assembly.GetExecutingAssembly().GetName().Version ??
+            throw new InvalidOperationException("The tool version couldn't be retrieved.");
+        if (File.Exists(Constants.CONFIG_FILENAME))
+        {
+            await MigrateConfig(toolVersion);
+
+            return;
+        }
+
+        await WriteConfig(new ToolConfiguration
+        {
+            Version = toolVersion,
+            DefaultInstallProjectOptions = new(),
+            DefaultInstallDatabaseOptions = new()
+        });
+    }
+
+
+    public async Task<InstallProjectOptions> GetDefaultInstallProjectOptions()
+    {
+        var config = await GetConfig();
+
+        return config.DefaultInstallProjectOptions ?? new();
+    }
+
+
+    public async Task<InstallDatabaseOptions> GetDefaultInstallDatabaseOptions()
+    {
+        var config = await GetConfig();
+
+        return config.DefaultInstallDatabaseOptions ?? new();
+    }
+
+
+    public Task RemoveProfile(ToolProfile? profile) =>
+        profile is null ? throw new ArgumentNullException(nameof(profile)) : RemoveProfileInternal(profile);
+
+
+    private async Task AddProfileInternal(ToolProfile profile)
+    {
+        var config = await GetConfig();
+        if (config.Profiles.Any(p => p.ProfileName?.Equals(profile.ProfileName, StringComparison.OrdinalIgnoreCase) ?? false))
+        {
+            throw new InvalidOperationException($"There is already a profile named '{profile.ProfileName}.'");
+        }
+
+        config.Profiles.Add(profile);
+
+        await WriteConfig(config);
+    }
+
+
+    private async Task MigrateConfig(Version toolVersion)
+    {
+        var config = await GetConfig();
+        if (config.Version?.Equals(toolVersion) ?? false)
+        {
+            return;
+        }
+
+        // Perform any migrations from old config version to new version here
+        string text = await File.ReadAllTextAsync(Constants.CONFIG_FILENAME);
+        var json = JsonConvert.DeserializeObject<JObject>(text) ??
+            throw new InvalidOperationException("Unable to read configuration file for migration.");
+        if (toolVersion >= new Version(5, 0) && config.Version < new Version(5, 0))
+        {
+            MigrateTo500(json, config);
+        }
+        if (toolVersion >= new Version(5, 3) && config.Version < new Version(5, 3))
+        {
+            MigrateTo530(config);
+        }
+
+        config.Version = toolVersion;
+
+        await WriteConfig(config);
+    }
+
+
+    private async Task RemoveProfileInternal(ToolProfile profile)
+    {
+        var config = await GetConfig();
+
+        // For some reason Profiles.Remove() didn't work, make a new list
+        var newProfiles = new List<ToolProfile>();
+        newProfiles.AddRange(config.Profiles.Where(p =>
+            !p.ProfileName?.Equals(profile.ProfileName, StringComparison.OrdinalIgnoreCase) ?? true));
+
+        config.Profiles = newProfiles;
+
+        await WriteConfig(config);
+    }
+
+
+    private async Task SetCurrentProfileInternal(ToolProfile profile)
+    {
+        var config = await GetConfig();
+        config.CurrentProfile = profile.ProfileName;
+        await WriteConfig(config);
+    }
+
+
+    private static Task WriteConfig(ToolConfiguration config) =>
+        File.WriteAllTextAsync(Constants.CONFIG_FILENAME, JsonConvert.SerializeObject(config, Formatting.Indented));
+
+
+    private static void MigrateTo500(JObject oldConfig, ToolConfiguration newConfig)
+    {
+        var oldInstallOptions = oldConfig["DefaultInstallOptions"];
+
+        var dbOptions = new InstallDatabaseOptions();
+        dbOptions.DatabaseName = oldInstallOptions?["DatabaseName"]?.ToString() ?? dbOptions.DatabaseName;
+        dbOptions.ServerName = oldInstallOptions?["ServerName"]?.ToString() ?? dbOptions.ServerName;
+        newConfig.DefaultInstallDatabaseOptions = dbOptions;
+
+        var projectOptions = new InstallProjectOptions();
+        projectOptions.Template = oldInstallOptions?["Template"]?.ToString() ?? projectOptions.Template;
+        projectOptions.ProjectName = oldInstallOptions?["ProjectName"]?.ToString() ?? projectOptions.ProjectName;
+        projectOptions.InstallRootPath = oldInstallOptions?["InstallRootPath"]?.ToString() ?? projectOptions.InstallRootPath;
+        projectOptions.UseCloud = bool.Parse(oldInstallOptions?["UseCloud"]?.ToString() ?? projectOptions.UseCloud.ToString());
+        string? oldVersion = oldInstallOptions?["Version"]?.ToString();
+        if (!string.IsNullOrEmpty(oldVersion))
+        {
+            projectOptions.Version = Version.Parse(oldVersion);
+        }
+
+        newConfig.DefaultInstallProjectOptions = projectOptions;
+    }
+
+
+    private static void MigrateTo530(ToolConfiguration newConfig) =>
+        newConfig.Profiles.ForEach(profile => profile.ProfileName = profile.ProjectName);
 }

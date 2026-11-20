@@ -2,11 +2,11 @@
 
 using Autofac;
 
-using Xperience.Manager;
-using Xperience.Manager.Commands;
-using Xperience.Manager.Repositories;
-using Xperience.Manager.Services;
-using Xperience.Manager.Wizards;
+using XperienceCommunity.Manager;
+using XperienceCommunity.Manager.Commands.Base;
+using XperienceCommunity.Manager.Repositories;
+using XperienceCommunity.Manager.Services.Interfaces;
+using XperienceCommunity.Manager.Wizards.Base;
 
 var builder = new ContainerBuilder();
 var assemblies = Assembly.GetExecutingAssembly();

@@ -2,69 +2,76 @@ using Newtonsoft.Json;
 
 using Spectre.Console;
 
-using Xperience.Manager.Repositories;
-using Xperience.Manager.Services;
+using XperienceCommunity.Manager.Commands.Base;
+using XperienceCommunity.Manager.Repositories;
+using XperienceCommunity.Manager.Services.Interfaces;
 
-namespace Xperience.Manager
+namespace XperienceCommunity.Manager;
+
+/// <summary>
+/// The main entry point for the console application which supports Dependency Injection.
+/// </summary>
+public class App(IConfigManager configManager, ICommandRepository commandRepository)
 {
     /// <summary>
-    /// The main entry point for the console application which supports Dependency Injection.
+    /// Runs the console application with the arguments provided by the user.
     /// </summary>
-    public class App(IConfigManager configManager, ICommandRepository commandRepository)
+    public async Task Run(string[] args)
     {
-        /// <summary>
-        /// Runs the console application with the arguments provided by the user.
-        /// </summary>
-        public async Task Run(string[] args)
+        AnsiConsole.WriteLine();
+        try
         {
-            AnsiConsole.WriteLine();
-            try
+            await configManager.EnsureConfigFile();
+        }
+        catch (JsonReaderException)
+        {
+            AnsiConsole.MarkupLineInterpolated($"[{Constants.ERROR_COLOR}]There was an error reading the tool config file {Constants.CONFIG_FILENAME}. Please delete or rename the file and migrate your configuration into the new file created on first run.[/]\n");
+            return;
+        }
+
+        string identifier = "help";
+        if (args.Length > 0)
+        {
+            identifier = args[0];
+        }
+
+        var command = commandRepository.Get(identifier);
+        if (command is null)
+        {
+            AnsiConsole.MarkupLineInterpolated($"[{Constants.ERROR_COLOR}]Invalid command '{identifier}'[/]\n");
+            return;
+        }
+
+        string? actionName = args.Length > 1 ? args[1].ToLower() : null;
+
+        await RunInternal(command, actionName);
+    }
+
+
+    private async Task RunInternal(ICommand command, string? actionName)
+    {
+        try
+        {
+            var activeProfile = await configManager.GetCurrentProfile();
+            await command.PreExecute(activeProfile, actionName);
+            if (!command.StopProcessing)
             {
-                await configManager.EnsureConfigFile();
-            }
-            catch (JsonReaderException)
-            {
-                AnsiConsole.MarkupLineInterpolated($"[{Constants.ERROR_COLOR}]There was an error reading the tool config file {Constants.CONFIG_FILENAME}. Please delete or rename the file and migrate your configuration into the new file created on first run.[/]\n");
-                return;
+                await command.Execute(activeProfile, actionName);
             }
 
-            string identifier = "help";
-            if (args.Length > 0)
+            if (!command.StopProcessing)
             {
-                identifier = args[0];
+                await command.PostExecute(activeProfile, actionName);
             }
 
-            var command = commandRepository.Get(identifier);
-            if (command is null)
+            if (command.Errors.Count != 0)
             {
-                AnsiConsole.MarkupLineInterpolated($"[{Constants.ERROR_COLOR}]Invalid command '{identifier}'[/]\n");
-                return;
+                AnsiConsole.MarkupLineInterpolated($"[{Constants.ERROR_COLOR}]Process failed with errors:\n{string.Join("\n", command.Errors)}[/]\n");
             }
-
-            try
-            {
-                var activeProfile = await configManager.GetCurrentProfile();
-                string? actionName = args.Length > 1 ? args[1].ToLower() : null;
-                await command.PreExecute(activeProfile, actionName);
-                if (!command.StopProcessing)
-                {
-                    await command.Execute(activeProfile, actionName);
-                }
-
-                if (!command.StopProcessing)
-                {
-                    await command.PostExecute(activeProfile, actionName);
-                }
-
-                if (command.Errors.Any())
-                {
-                    AnsiConsole.MarkupLineInterpolated($"[{Constants.ERROR_COLOR}]Process failed with errors:\n{string.Join("\n", command.Errors)}[/]\n");
-                }
-            }
-            catch (Exception e)
-            {
-                AnsiConsole.MarkupLineInterpolated($"[{Constants.ERROR_COLOR}]Process failed with error:\n{e.Message}[/]\n");
-            }
+        }
+        catch (Exception e)
+        {
+            AnsiConsole.MarkupLineInterpolated($"[{Constants.ERROR_COLOR}]Process failed with error:\n{e.Message}[/]\n");
         }
     }
 }

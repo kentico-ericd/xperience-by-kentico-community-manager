@@ -1,49 +1,77 @@
-﻿namespace Xperience.Manager.Services
+﻿namespace XperienceCommunity.Manager.Services.Interfaces;
+
+/// <summary>
+/// Contains methods for rendering report tables and graphs.
+/// </summary>
+public interface IReportRenderer : IService
 {
     /// <summary>
-    /// Contains methods for rendering report tables and graphs.
+    /// Exports the recorded report output to a file ends recording.
     /// </summary>
-    public interface IReportRenderer : IService
-    {
-        /// <summary>
-        /// Displays the enabled administration users table.
-        /// </summary>
-        Task RenderAdminUserReport(string connectionString);
+    /// <param name="exportAsText">If true, exports the report as a text file; otherwise, exports as an HTML file.</param>
+    /// <param name="workingDirectory">The directory where the report will be exported.</param>
+    public Task Export(bool exportAsText, string workingDirectory);
 
 
-        /// <summary>
-        /// Displays tables related to the CMS_Class database table.
-        /// </summary>
-        Task RenderClassConsistencyReport(string connectionString);
+    /// <summary>
+    /// Displays the enabled administration users table.
+    /// </summary>
+    public Task RenderAdminUserReport(string connectionString);
 
 
-        /// <summary>
-        /// Displays a table containing common Event log errors.
-        /// </summary>
-        Task RenderEventLogReport(string connectionString);
+    /// <summary>
+    /// Displays tables showing content synchronization issues.
+    /// </summary>
+    /// <param name="connectionString">The connection string to the database.</param>
+    /// <param name="workingDirectory">The root directory of the Xperience by Kentico instance.</param>
+    /// <param name="customDirectoryName">The name of the folder containing assets, if not using the default name.</param>
+    public Task RenderContentSyncReport(string connectionString, string workingDirectory, string? customDirectoryName);
 
 
-        /// <summary>
-        /// Displays a table showing the largest database tables.
-        /// </summary>
-        Task RenderTableSizeReport(string connectionString);
+    /// <summary>
+    /// Displays tables related to the CMS_Class database table.
+    /// </summary>
+    public Task RenderClassConsistencyReport(string connectionString);
 
 
-        /// <summary>
-        /// Displays a table showing the number and count of assets.
-        /// </summary>
-        Task RenderAssetsReport(string workingDirectory, string? customDirectoryName);
+    /// <summary>
+    /// Displays a table containing common Event log errors.
+    /// </summary>
+    public Task RenderEventLogReport(string connectionString);
 
 
-        /// <summary>
-        /// Displays a bar graph showing channels and their item counts.
-        /// </summary>
-        Task RenderChannelStatisticsReport(string connectionString);
+    /// <summary>
+    /// Displays a table showing the largest database tables.
+    /// </summary>
+    public Task RenderTableSizeReport(string connectionString);
 
 
-        /// <summary>
-        /// Displays a bar graph showing workspaces and their item counts.
-        /// </summary>
-        Task RenderWorkspaceReport(string connectionString);
-    }
+    /// <summary>
+    /// Displays a table showing the number and count of assets.
+    /// </summary>
+    public Task RenderAssetsReport(string workingDirectory, string? customDirectoryName);
+
+
+    /// <summary>
+    /// Displays a bar graph showing channels and their item counts.
+    /// </summary>
+    public Task RenderChannelStatisticsReport(string connectionString);
+
+
+    /// <summary>
+    /// Displays a bar graph showing workspaces and their item counts.
+    /// </summary>
+    public Task RenderWorkspaceReport(string connectionString);
+
+
+    /// <summary>
+    /// Displays a table of content items with no references.
+    /// </summary>
+    public Task RenderUnusedContentItemsReport(string connectionString);
+
+
+    /// <summary>
+    /// Displays tables showing scheduled task execution statistics.
+    /// </summary>
+    public Task RenderScheduledTaskReport(string connectionString);
 }

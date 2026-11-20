@@ -1,182 +1,170 @@
 ﻿using Spectre.Console;
 
-using Xperience.Manager.Configuration;
-using Xperience.Manager.Options;
-using Xperience.Manager.Services;
-using Xperience.Manager.Wizards;
+using XperienceCommunity.Manager.Commands.Base;
+using XperienceCommunity.Manager.Configuration;
+using XperienceCommunity.Manager.Options;
+using XperienceCommunity.Manager.Services.Interfaces;
+using XperienceCommunity.Manager.Wizards.Base;
 
-namespace Xperience.Manager.Commands
+namespace XperienceCommunity.Manager.Commands;
+
+public class ProfileCommand(IConfigManager configManager, IWizard<NewProfileOptions> wizard) : AbstractCommand
 {
-    public class ProfileCommand : AbstractCommand
+    private const string ADD = "add";
+    private const string DELETE = "delete";
+    private const string SWITCH = "switch";
+
+
+    public override IEnumerable<string> Keywords => ["p", "profile"];
+
+
+    public override IEnumerable<string> Parameters => [ADD, DELETE, SWITCH];
+
+
+    public override string Description => "Manage and switch installation profiles";
+
+
+    /// <summary>
+    /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected into the constuctor.
+    /// </summary>
+#pragma warning disable CS8625
+    internal ProfileCommand() : this(null, null) { }
+#pragma warning restore CS8625
+
+
+    public override async Task PreExecute(ToolProfile? profile, string? action)
     {
-        private const string ADD = "add";
-        private const string DELETE = "delete";
-        private const string SWITCH = "switch";
-        private readonly IConfigManager configManager;
-        private readonly IWizard<NewProfileOptions> wizard;
-
-
-        public override IEnumerable<string> Keywords => ["p", "profile"];
-
-
-        public override IEnumerable<string> Parameters => [ADD, DELETE, SWITCH];
-
-
-        public override string Description => "Manage and switch installation profiles";
-
-
-        /// <summary>
-        /// Do not use. Workaround for circular dependency in <see cref="HelpCommand"/> when commands are injected
-        /// into the constuctor.
-        /// </summary>
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        internal ProfileCommand()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        if (StopProcessing)
         {
+            return;
         }
 
-
-        public ProfileCommand(IConfigManager configManager, IWizard<NewProfileOptions> wizard)
+        action ??= SWITCH;
+        if (!Parameters.Any(p => p.Equals(action, StringComparison.OrdinalIgnoreCase)))
         {
-            this.configManager = configManager;
-            this.wizard = wizard;
+            LogError($"Must provide one parameter from '{string.Join(", ", Parameters)}'");
+
+            return;
         }
 
+        await base.PreExecute(profile, action);
+    }
 
-        public override async Task PreExecute(ToolProfile? profile, string? action)
+
+    public override async Task Execute(ToolProfile? profile, string? action)
+    {
+        if (StopProcessing)
         {
-            if (StopProcessing)
-            {
-                return;
-            }
-
-            action ??= SWITCH;
-            if (!Parameters.Any(p => p.Equals(action, StringComparison.OrdinalIgnoreCase)))
-            {
-                LogError($"Must provide one parameter from '{string.Join(", ", Parameters)}'");
-
-                return;
-            }
-
-            await base.PreExecute(profile, action);
+            return;
         }
 
+        action ??= SWITCH;
+        var config = await configManager.GetConfig();
 
-        public override async Task Execute(ToolProfile? profile, string? action)
+        // Can't switch or delete if there are no profiles
+        if (config.Profiles.Count == 0 &&
+            (action.Equals(SWITCH, StringComparison.OrdinalIgnoreCase) || action.Equals(DELETE, StringComparison.OrdinalIgnoreCase)))
         {
-            if (StopProcessing)
-            {
-                return;
-            }
+            AnsiConsole.MarkupLineInterpolated($"There are no registered profiles. Install a new instance with [{Constants.SUCCESS_COLOR}]xman i[/] to add a profile.\n");
 
-            action ??= SWITCH;
-            var config = await configManager.GetConfig();
-
-            // Can't switch or delete if there are no profiles
-            if (config.Profiles.Count == 0 &&
-                (action.Equals(SWITCH, StringComparison.OrdinalIgnoreCase) || action.Equals(DELETE, StringComparison.OrdinalIgnoreCase)))
-            {
-                AnsiConsole.MarkupLineInterpolated($"There are no registered profiles. Install a new instance with [{Constants.SUCCESS_COLOR}]xman i[/] to add a profile.\n");
-
-                return;
-            }
-
-            if (config.Profiles.Count == 1 && action.Equals(SWITCH, StringComparison.OrdinalIgnoreCase))
-            {
-                AnsiConsole.WriteLine("You're currently using the only registered profile.\n");
-
-                return;
-            }
-
-            if (action?.Equals(SWITCH, StringComparison.OrdinalIgnoreCase) ?? false)
-            {
-                await SwitchProfile(config.Profiles, profile);
-            }
-            else if (action?.Equals(ADD, StringComparison.OrdinalIgnoreCase) ?? false)
-            {
-                await AddProfile();
-            }
-            else if (action?.Equals(DELETE, StringComparison.OrdinalIgnoreCase) ?? false)
-            {
-                await DeleteProfile(config.Profiles);
-            }
+            return;
         }
 
-
-        public override async Task PostExecute(ToolProfile? profile, string? action)
+        if (config.Profiles.Count == 1 && action.Equals(SWITCH, StringComparison.OrdinalIgnoreCase))
         {
-            AnsiConsole.WriteLine();
+            AnsiConsole.WriteLine("You're currently using the only registered profile.\n");
 
-            await base.PostExecute(profile, action);
+            return;
         }
 
-
-        private async Task AddProfile()
+        if (action?.Equals(SWITCH, StringComparison.OrdinalIgnoreCase) ?? false)
         {
-            if (StopProcessing)
-            {
-                return;
-            }
+            await SwitchProfile(config.Profiles, profile);
+        }
+        else if (action?.Equals(ADD, StringComparison.OrdinalIgnoreCase) ?? false)
+        {
+            await AddProfile();
+        }
+        else if (action?.Equals(DELETE, StringComparison.OrdinalIgnoreCase) ?? false)
+        {
+            await DeleteProfile(config.Profiles);
+        }
+    }
 
-            var options = await wizard.Run();
-            if (!Directory.Exists(options.WorkingDirectory))
-            {
-                LogError($"The directory {options.WorkingDirectory} couldn't be found.");
 
-                return;
-            }
+    public override async Task PostExecute(ToolProfile? profile, string? action)
+    {
+        AnsiConsole.WriteLine();
 
-            await configManager.AddProfile(new()
-            {
-                ProfileName = options.ProfileName,
-                ProjectName = options.ProjectName,
-                WorkingDirectory = options.WorkingDirectory
-            });
+        await base.PostExecute(profile, action);
+    }
 
-            AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]Profile '{options.ProfileName}' added[/]");
+
+    private async Task AddProfile()
+    {
+        if (StopProcessing)
+        {
+            return;
         }
 
-
-        private async Task DeleteProfile(List<ToolProfile> profiles)
+        var options = await wizard.Run();
+        if (!Directory.Exists(options.WorkingDirectory))
         {
-            if (StopProcessing)
-            {
-                return;
-            }
+            LogError($"The directory {options.WorkingDirectory} couldn't be found.");
 
-            var profile = AnsiConsole.Prompt(new SelectionPrompt<ToolProfile>()
-                .Title("Delete which [green]profile[/]?")
-                .PageSize(10)
-                .UseConverter(p => p.ProfileName ?? string.Empty)
-                .MoreChoicesText("Scroll for more...")
-                .AddChoices(profiles));
-
-            await configManager.RemoveProfile(profile);
-
-            AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]Profile '{profile.ProfileName}' deleted[/]");
+            return;
         }
 
-
-        private async Task SwitchProfile(List<ToolProfile> profiles, ToolProfile? profile)
+        await configManager.AddProfile(new()
         {
-            if (StopProcessing)
-            {
-                return;
-            }
+            ProfileName = options.ProfileName,
+            ProjectName = options.ProjectName,
+            WorkingDirectory = options.WorkingDirectory
+        });
 
-            PrintCurrentProfile(profile);
+        AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]Profile '{options.ProfileName}' added[/]");
+    }
 
-            var prompt = new SelectionPrompt<ToolProfile>()
-                .Title("Switch to profile:")
-                .PageSize(10)
-                .UseConverter(p => p.ProfileName ?? string.Empty)
-                .MoreChoicesText("Scroll for more...")
-                .AddChoices(profiles);
 
-            var newProfile = AnsiConsole.Prompt(prompt);
-            await configManager.SetCurrentProfile(newProfile);
-
-            AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]Switched to '{newProfile.ProfileName}'[/]");
+    private async Task DeleteProfile(List<ToolProfile> profiles)
+    {
+        if (StopProcessing)
+        {
+            return;
         }
+
+        var profile = await AnsiConsole.PromptAsync(new SelectionPrompt<ToolProfile>()
+            .Title("Delete which [green]profile[/]?")
+            .PageSize(10)
+            .UseConverter(p => p.ProfileName ?? string.Empty)
+            .MoreChoicesText("Scroll for more...")
+            .AddChoices(profiles));
+
+        await configManager.RemoveProfile(profile);
+
+        AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]Profile '{profile.ProfileName}' deleted[/]");
+    }
+
+
+    private async Task SwitchProfile(List<ToolProfile> profiles, ToolProfile? profile)
+    {
+        if (StopProcessing)
+        {
+            return;
+        }
+
+        PrintCurrentProfile(profile);
+
+        var prompt = new SelectionPrompt<ToolProfile>()
+            .Title("Switch to profile:")
+            .PageSize(10)
+            .UseConverter(p => p.ProfileName ?? string.Empty)
+            .MoreChoicesText("Scroll for more...")
+            .AddChoices(profiles);
+
+        var newProfile = await AnsiConsole.PromptAsync(prompt);
+        await configManager.SetCurrentProfile(newProfile);
+
+        AnsiConsole.MarkupLineInterpolated($"[{Constants.SUCCESS_COLOR}]Switched to '{newProfile.ProfileName}'[/]");
     }
 }

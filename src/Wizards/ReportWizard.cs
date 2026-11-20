@@ -1,48 +1,55 @@
 ﻿using Spectre.Console;
 
-using Xperience.Manager.Helpers;
-using Xperience.Manager.Options;
-using Xperience.Manager.Steps;
+using XperienceCommunity.Manager.Helpers;
+using XperienceCommunity.Manager.Options;
+using XperienceCommunity.Manager.Steps;
+using XperienceCommunity.Manager.Wizards.Base;
 
-namespace Xperience.Manager.Wizards
+namespace XperienceCommunity.Manager.Wizards;
+
+/// <summary>
+/// A wizard which generates an <see cref="ReportOptions"/> for generating reports. The 
+/// <see cref="AbstractWizard{TOptions}.Run(string[])"/> method should be passed the working directory of the project.
+/// </summary>
+public class ReportWizard : AbstractWizard<ReportOptions>
 {
-    /// <summary>
-    /// A wizard which generates an <see cref="ReportOptions"/> for generating reports. The 
-    /// <see cref="AbstractWizard{TOptions}.Run(string[])"/> method should be passed the working directory of the project.
-    /// </summary>
-    public class ReportWizard : AbstractWizard<ReportOptions>
+    public override Task InitSteps(params string[] args)
     {
-        public override Task InitSteps(params string[] args)
+        if (args.Length != 1)
         {
-            if (args.Length != 1)
-            {
-                throw new InvalidOperationException($"{nameof(ReportWizard)} requires exactly 1 argument.");
-            }
-
-            string workingDirectory = args[0];
-            if (AssetHelper.DefaultDirectoryExists(workingDirectory))
-            {
-                return Task.CompletedTask;
-            }
-
-            bool isUsingCustomDir = false;
-            Steps.Add(new Step<bool>(new()
-            {
-                Prompt = new ConfirmationPrompt($"Default asset directory not found. Are you using a [{Constants.PROMPT_COLOR}]custom" +
-                    $" asset directory[/]?")
-                {
-                    DefaultValue = true
-                },
-                ValueReceiver = (v) => isUsingCustomDir = v
-            }));
-            Steps.Add(new Step<string>(new()
-            {
-                Prompt = new TextPrompt<string>($"Custom directory [{Constants.PROMPT_COLOR}]name[/]:"),
-                ValueReceiver = (v) => Options.CustomAssetDirectoryName = v,
-                SkipChecker = () => !isUsingCustomDir
-            }));
-
-            return Task.CompletedTask;
+            throw new InvalidOperationException($"{nameof(ReportWizard)} requires exactly 1 argument.");
         }
+
+        bool isUsingCustomDir = false;
+        string workingDirectory = args[0];
+        if (!AssetHelper.DefaultDirectoryExists(workingDirectory))
+        {
+            isUsingCustomDir = true;
+        }
+
+        Steps.Add(new Step<string>(new()
+        {
+            Prompt = new TextPrompt<string>($"Custom asset directory [{Constants.PROMPT_COLOR}]name[/]:"),
+            ValueReceiver = (v) => Options.CustomAssetDirectoryName = v,
+            SkipChecker = () => !isUsingCustomDir
+        }));
+        Steps.Add(new Step<bool>(new()
+        {
+            Prompt = new ConfirmationPrompt("Export the report results?")
+            {
+                DefaultValue = false
+            },
+            ValueReceiver = (v) => Options.DoExport = v
+        }));
+        Steps.Add(new Step<string>(new()
+        {
+            Prompt = new SelectionPrompt<string>()
+                .Title($"What export [{Constants.PROMPT_COLOR}]type[/]?")
+                .AddChoices("HTML", "Text"),
+            ValueReceiver = (v) => Options.ExportAsText = v.Equals("Text"),
+            SkipChecker = () => !Options.DoExport
+        }));
+
+        return Task.CompletedTask;
     }
 }

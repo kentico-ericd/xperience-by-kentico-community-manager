@@ -6,12 +6,12 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/bin/Debug/net7.0/Kentico.Xperience.Manager.dll",
+            "program": "${workspaceFolder}/src/bin/Debug/net10.0/XperienceCommunity.Manager.dll",
             "args": ["i"],
             "cwd": "${workspaceFolder}",
             "console": "externalTerminal",
             "stopAtEntry": false,
-            "brokeredServicePipeName": "undefined",
+            "brokeredServicePipeName": "undefined"
         }
     ]
 }

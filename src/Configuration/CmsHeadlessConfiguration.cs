@@ -1,123 +1,131 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Xperience.Manager.Configuration
+namespace XperienceCommunity.Manager.Configuration;
+
+/// <summary>
+/// Represents the headless options specified in the application settings. See
+/// <see href="https://docs.kentico.com/documentation/developers-and-admins/configuration/headless-channel-management#configure-the-headless-api"/>.
+/// </summary>
+public class CmsHeadlessConfiguration
 {
+    [Display(Description = "Specifies whether GraphQL API endpoints are enabled.")]
     /// <summary>
-    /// Represents the headless options specified in the application settings. See
-    /// <see href="https://docs.kentico.com/documentation/developers-and-admins/configuration/headless-channel-management#configure-the-headless-api"/>.
+    /// Specifies whether GraphQL API endpoints are enabled.
     /// </summary>
-    public class CmsHeadlessConfiguration
+    public bool Enable { get; set; } = true;
+
+
+    [Display(Description = "Specifies whether complexity analysis is enabled.")]
+    public bool EnableComplexity { get; set; } = true;
+
+
+    [Display(Description = "Specifies whether performance optimizations are enabled for GraphQL queries that retrieve data with fields " +
+        "linking to a large number of possible content types.")]
+    public bool EnableUnionQueryOptimization { get; set; } = true;
+
+
+    [Display(Description = "Specifies the maximum allowed depth of field cycles in a GraphQL query")]
+    public int MaxFieldCycleDepth { get; set; } = 5;
+
+
+    [Display(Description = "Specifies whether Tracking API endpoints are enabled. Allows you to disable the tracking API while keeping " +
+        "the GraphQL API enabled.")]
+    public bool EnableTracking { get; set; } = true;
+
+
+    [Display(Description = "Specifies whether GraphQL introspection is enabled (__schema queries and GUI tools for exploring the " +
+        "schema).")]
+    /// <summary>
+    /// Specifies whether GraphQL introspection is enabled (__schema queries and GUI tools for exploring the schema).
+    /// See <see href="https://graphql.org/learn/introspection/"/>.
+    /// </summary>
+    public bool AllowIntrospection { get; set; }
+
+
+    [Display(Description = "The slug used in channel endpoint URLs. You need to include the leading slash ('/').")]
+    /// <summary>
+    /// The slug used in channel endpoint URLs. You need to include the leading slash ('/').
+    /// </summary>
+    public string GraphQlEndpointPath { get; set; } = "/graphql";
+
+
+    [Display(Description = "The domains that are allowed origins for CORS (Cross-Origin Resource Sharing).")]
+    /// <summary>
+    /// The domains that are allowed origins for CORS (Cross-Origin Resource Sharing). See
+    /// <see href="https://docs.kentico.com/documentation/developers-and-admins/development/content-retrieval/retrieve-headless-content"/>.
+    /// </summary>
+    public string? CorsAllowedOrigins { get; set; }
+
+
+    [Display(Description = "The HTTP headers that are allowed for content retrieval requests. If not set, all headers are allowed by " +
+        "default.")]
+    /// <summary>
+    /// The HTTP headers that are allowed for content retrieval requests. If not set, all headers are allowed by default.
+    /// See <see href="https://docs.kentico.com/documentation/developers-and-admins/development/content-retrieval/retrieve-headless-content"/>.
+    /// </summary>
+    public string? CorsAllowedHeaders { get; set; }
+
+
+    [Display(Description = "The caching behavior for headless content.")]
+    /// <summary>
+    /// Contains options which allow you to customize caching behavior for headless content. The default values provide optimal
+    /// caching performance for most projects.
+    /// </summary>
+    public CachingOptions Caching { get; set; } = new CachingOptions();
+
+
+    public class CachingOptions
     {
-        [Display(Description = "Specifies whether GraphQL API endpoints are enabled.")]
+        [Display(Name = "Caching::Enable", Description = "Specifies whether caching is enabled.")]
         /// <summary>
-        /// Specifies whether GraphQL API endpoints are enabled.
+        /// Specifies whether caching is enabled.
         /// </summary>
         public bool Enable { get; set; } = true;
 
 
-        [Display(Description = "Specifies whether complexity analysis is enabled.")]
-        public bool EnableComplexity { get; set; } = true;
-
-
-        [Display(Description = "Specifies whether Tracking API endpoints are enabled. Allows you to disable the tracking API while keeping " +
-            "the GraphQL API enabled.")]
-        public bool EnableTracking { get; set; } = true;
-
-
-        [Display(Description = "Specifies whether GraphQL introspection is enabled (__schema queries and GUI tools for exploring the " +
-            "schema).")]
+        [Display(Name = "Caching::UseRequestCacheControlHeaders", Description = "Specifies whether caching respects the Cache-Control " +
+            "header of individual requests.")]
         /// <summary>
-        /// Specifies whether GraphQL introspection is enabled (__schema queries and GUI tools for exploring the schema).
-        /// See <see href="https://graphql.org/learn/introspection/"/>.
+        /// Specifies whether caching respects the Cache-Control header of individual requests.
         /// </summary>
-        public bool AllowIntrospection { get; set; }
+        public bool UseRequestCacheControlHeaders { get; set; } = true;
 
 
-        [Display(Description = "The slug used in channel endpoint URLs. You need to include the leading slash ('/').")]
+        [Display(Name = "Caching::AddResponseCacheControlHeaders", Description = "Specifies whether caching sets the Cache-Control " +
+            "response header.")]
         /// <summary>
-        /// The slug used in channel endpoint URLs. You need to include the leading slash ('/').
+        /// Specifies whether caching sets the Cache-Control response header.
         /// </summary>
-        public string GraphQlEndpointPath { get; set; } = "/graphql";
+        public bool AddResponseCacheControlHeaders { get; set; } = true;
 
 
-        [Display(Description = "The domains that are allowed origins for CORS (Cross-Origin Resource Sharing).")]
+        [Display(Name = "Caching::UseCacheDependencies", Description = "Specifies whether caching uses cache dependencies to flush the " +
+            "cache when data in a cached response changes.")]
         /// <summary>
-        /// The domains that are allowed origins for CORS (Cross-Origin Resource Sharing). See
-        /// <see href="https://docs.kentico.com/documentation/developers-and-admins/development/content-retrieval/retrieve-headless-content"/>.
+        /// Specifies whether caching uses cache dependencies to flush the cache when data in a cached response changes.
         /// </summary>
-        public string? CorsAllowedOrigins { get; set; }
+        public bool UseCacheDependencies { get; set; } = true;
 
 
-        [Display(Description = "The HTTP headers that are allowed for content retrieval requests. If not set, all headers are allowed by " +
-            "default.")]
+        [Display(Name = "Caching::AbsoluteExpiration", Description = "The maximum expiration time for a cache entry in minutes.")]
         /// <summary>
-        /// The HTTP headers that are allowed for content retrieval requests. If not set, all headers are allowed by default.
-        /// See <see href="https://docs.kentico.com/documentation/developers-and-admins/development/content-retrieval/retrieve-headless-content"/>.
+        /// The maximum expiration time for a cache entry in minutes.
         /// </summary>
-        public string? CorsAllowedHeaders { get; set; }
+        public int AbsoluteExpiration { get; set; } = 720;
 
 
-        [Display(Description = "The caching behavior for headless content.")]
+        [Display(Name = "Caching::SlidingExpiration", Description = "The sliding expiration date for cache entries in minutes. Cannot " +
+            "exceed the value of AbsoluteExpiration.")]
         /// <summary>
-        /// Contains options which allow you to customize caching behavior for headless content. The default values provide optimal
-        /// caching performance for most projects.
+        /// The sliding expiration date for cache entries in minutes. Cannot exceed the value of <see cref="AbsoluteExpiration"/>.
         /// </summary>
-        public CachingOptions Caching { get; set; } = new CachingOptions();
+        public int SlidingExpiration { get; set; } = 60;
 
 
-        public class CachingOptions
-        {
-            [Display(Name = "Caching::Enable", Description = "Specifies whether caching is enabled.")]
-            /// <summary>
-            /// Specifies whether caching is enabled.
-            /// </summary>
-            public bool Enable { get; set; } = true;
-
-
-            [Display(Name = "Caching::UseRequestCacheControlHeaders", Description = "Specifies whether caching respects the Cache-Control " +
-                "header of individual requests.")]
-            /// <summary>
-            /// Specifies whether caching respects the Cache-Control header of individual requests.
-            /// </summary>
-            public bool UseRequestCacheControlHeaders { get; set; } = true;
-
-
-            [Display(Name = "Caching::AddResponseCacheControlHeaders", Description = "Specifies whether caching sets the Cache-Control " +
-                "response header.")]
-            /// <summary>
-            /// Specifies whether caching sets the Cache-Control response header.
-            /// </summary>
-            public bool AddResponseCacheControlHeaders { get; set; } = true;
-
-
-            [Display(Name = "Caching::UseCacheDependencies", Description = "Specifies whether caching uses cache dependencies to flush the " +
-                "cache when data in a cached response changes.")]
-            /// <summary>
-            /// Specifies whether caching uses cache dependencies to flush the cache when data in a cached response changes.
-            /// </summary>
-            public bool UseCacheDependencies { get; set; } = true;
-
-
-            [Display(Name = "Caching::AbsoluteExpiration", Description = "The maximum expiration time for a cache entry in minutes.")]
-            /// <summary>
-            /// The maximum expiration time for a cache entry in minutes.
-            /// </summary>
-            public int AbsoluteExpiration { get; set; } = 720;
-
-
-            [Display(Name = "Caching::SlidingExpiration", Description = "The sliding expiration date for cache entries in minutes. Cannot " +
-                "exceed the value of AbsoluteExpiration.")]
-            /// <summary>
-            /// The sliding expiration date for cache entries in minutes. Cannot exceed the value of <see cref="AbsoluteExpiration"/>.
-            /// </summary>
-            public int SlidingExpiration { get; set; } = 60;
-
-
-            [Display(Name = "Caching::SizeLimit", Description = "The maximum size for in-memory cache in bytes.")]
-            /// <summary>
-            /// The maximum size for in-memory cache in bytes.
-            /// </summary>
-            public long SizeLimit { get; set; } = 100_000_000;
-        }
+        [Display(Name = "Caching::SizeLimit", Description = "The maximum size for in-memory cache in bytes.")]
+        /// <summary>
+        /// The maximum size for in-memory cache in bytes.
+        /// </summary>
+        public long SizeLimit { get; set; } = 100_000_000;
     }
 }

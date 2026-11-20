@@ -1,8 +1,7 @@
 # Xperience Manager (xman)
 
-[![Kentico Labs](https://img.shields.io/badge/Kentico_Labs-grey?labelColor=orange&logo=data:image/svg+xml;base64,PHN2ZyBjbGFzcz0ic3ZnLWljb24iIHN0eWxlPSJ3aWR0aDogMWVtOyBoZWlnaHQ6IDFlbTt2ZXJ0aWNhbC1hbGlnbjogbWlkZGxlO2ZpbGw6IGN1cnJlbnRDb2xvcjtvdmVyZmxvdzogaGlkZGVuOyIgdmlld0JveD0iMCAwIDEwMjQgMTAyNCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik05NTYuMjg4IDgwNC40OEw2NDAgMjc3LjQ0VjY0aDMyYzE3LjYgMCAzMi0xNC40IDMyLTMycy0xNC40LTMyLTMyLTMyaC0zMjBjLTE3LjYgMC0zMiAxNC40LTMyIDMyczE0LjQgMzIgMzIgMzJIMzg0djIxMy40NEw2Ny43MTIgODA0LjQ4Qy00LjczNiA5MjUuMTg0IDUxLjIgMTAyNCAxOTIgMTAyNGg2NDBjMTQwLjggMCAxOTYuNzM2LTk4Ljc1MiAxMjQuMjg4LTIxOS41MnpNMjQxLjAyNCA2NDBMNDQ4IDI5NS4wNFY2NGgxMjh2MjMxLjA0TDc4Mi45NzYgNjQwSDI0MS4wMjR6IiAgLz48L3N2Zz4=)](https://github.com/Kentico/.github/blob/main/SUPPORT.md#labs-limited-support)
-[![Nuget](https://img.shields.io/nuget/v/Kentico.Xperience.Manager)](https://www.nuget.org/packages/Kentico.Xperience.Manager#versions-body-tab)
-[![build](https://github.com/kentico/xperience-manager/actions/workflows/build.yml/badge.svg)](https://github.com/kentico/xperience-manager/actions/workflows/build.yml)
+[![Nuget](https://img.shields.io/nuget/v/XperienceCommunity.Manager)](https://www.nuget.org/packages/XperienceCommunity.Manager#versions-body-tab)
+[![build](https://github.com/kentico-ericd/xperience-by-kentico-community-manager/actions/workflows/build.yml/badge.svg)](https://github.com/kentico-ericd/xperience-by-kentico-community-manager/actions/workflows/build.yml)
 
 This tool simplifies the process of installing and managing Xperience by Kentico instances by providing step-by-step wizards with default options provided.
 
@@ -10,20 +9,20 @@ This tool simplifies the process of installing and managing Xperience by Kentico
 
 ## Requirements
 
-- .NET 8.0 Runtime or newer <https://dotnet.microsoft.com/en-us/download/dotnet/8.0>
+- .NET 10.0 Runtime or newer <https://dotnet.microsoft.com/en-us/download/dotnet/10.0>
 
 ## :gear: Installing and updating the tool
 
 Run the following command from a command prompt such as Powershell to install the tool:
 
 ```bash
-dotnet tool install Kentico.Xperience.Manager -g
+dotnet tool install XperienceCommunity.Manager -g
 ```
 
 To update to the latest version, run the following command:
 
 ```bash
-dotnet tool update Kentico.Xperience.Manager -g
+dotnet tool update XperienceCommunity.Manager -g
 ```
 
 ## 🚀 Quick Start
@@ -36,12 +35,3 @@ This tool can be run from anywhere, as long as the directory contains the [confi
 
 View the [Usage Guide](docs/Usage-Guide.md) for more detailed instructions.
 
-## Support
-
-[![Kentico Labs](https://img.shields.io/badge/Kentico_Labs-grey?labelColor=orange&logo=data:image/svg+xml;base64,PHN2ZyBjbGFzcz0ic3ZnLWljb24iIHN0eWxlPSJ3aWR0aDogMWVtOyBoZWlnaHQ6IDFlbTt2ZXJ0aWNhbC1hbGlnbjogbWlkZGxlO2ZpbGw6IGN1cnJlbnRDb2xvcjtvdmVyZmxvdzogaGlkZGVuOyIgdmlld0JveD0iMCAwIDEwMjQgMTAyNCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxwYXRoIGQ9Ik05NTYuMjg4IDgwNC40OEw2NDAgMjc3LjQ0VjY0aDMyYzE3LjYgMCAzMi0xNC40IDMyLTMycy0xNC40LTMyLTMyLTMyaC0zMjBjLTE3LjYgMC0zMiAxNC40LTMyIDMyczE0LjQgMzIgMzIgMzJIMzg0djIxMy40NEw2Ny43MTIgODA0LjQ4Qy00LjczNiA5MjUuMTg0IDUxLjIgMTAyNCAxOTIgMTAyNGg2NDBjMTQwLjggMCAxOTYuNzM2LTk4Ljc1MiAxMjQuMjg4LTIxOS41MnpNMjQxLjAyNCA2NDBMNDQ4IDI5NS4wNFY2NGgxMjh2MjMxLjA0TDc4Mi45NzYgNjQwSDI0MS4wMjR6IiAgLz48L3N2Zz4=)](https://github.com/Kentico/.github/blob/main/SUPPORT.md#labs-limited-support)
-
-This project has **Kentico Labs limited support**.
-
-See [`SUPPORT.md`](https://github.com/Kentico/.github/blob/main/SUPPORT.md#full-support) for more information.
-
-For any security issues see [`SECURITY.md`](https://github.com/Kentico/.github/blob/main/SECURITY.md).
