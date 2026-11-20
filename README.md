@@ -5,7 +5,7 @@
 
 This tool simplifies the process of installing and managing Xperience by Kentico instances by providing step-by-step wizards with default options provided.
 
-![Screenshot](/img/screenshot.png)
+![Screenshot](/img/install.png)
 
 ## Requirements
 
@@ -27,11 +27,22 @@ dotnet tool update XperienceCommunity.Manager -g
 
 ## 🚀 Quick Start
 
-Run any command such as `xman i` from a command prompt to get started! You can use `xman` without any parameters to view the help menu and review the available commands.
-
 This tool can be run from anywhere, as long as the directory contains the [configuration file](docs/Usage-Guide.md#configuration-file). If there is no configuration file, a new one will be created when you run the tool.
+
+If you already have Xperience by Kentico projects installed, you can run `profile add` to register it with the tool:
+
+```bash
+xman p add
+```
+
+![New profile](/img/newprofile.png)
+
+To install a new instance of Xperience by Kentico, simply run the `install` command:
+
+```bash
+xman i
+```
 
 ## Full Instructions
 
 View the [Usage Guide](docs/Usage-Guide.md) for more detailed instructions.
-
